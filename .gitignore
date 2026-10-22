@@ -1,0 +1,19 @@
+# OASIS data must not be committed (OASIS Data Use Agreement)
+*.nii
+*.nii.gz
+*.mgz
+*.img
+*.hdr
+*.xlsx
+oasis_master_features_labels.csv
+oasis_features_*.csv
+oof_predictions_ANFIS-*.csv
+oof_predictions_baseline_*.csv
+
+# model weights
+*.pth
+*.pt
+
+# Python / Jupyter
+__pycache__/
+.ipynb_checkpoints/

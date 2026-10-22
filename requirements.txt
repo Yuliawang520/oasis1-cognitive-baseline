@@ -1,0 +1,16 @@
+# scripts/evaluate.py
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.5
+matplotlib>=3.8
+
+# notebooks (each Colab notebook also installs what it needs in its first cell)
+torch==2.8.0
+torchvision==0.23.0
+timm>=0.9
+nibabel>=5.0
+openpyxl>=3.1
+imbalanced-learn>=0.12
+tqdm>=4.0
+Pillow>=10.0
