@@ -2,7 +2,7 @@
 
 Code, the subject-level cross-validation split, and out-of-fold model predictions for
 
-> Y. Cao and S. Ling, "How Much Does MRI Add Beyond the MMSE? A Cautionary Benchmark of Deep and Neuro-Fuzzy Dementia Classification on OASIS-1," manuscript, 2026.
+> Y. Cao, J. Fu, and S. Ling, "How Much Does MRI Add Beyond the MMSE? A Cautionary Benchmark of Deep and Neuro-Fuzzy Dementia Classification on OASIS-1," manuscript, 2026.
 
 On 226 OASIS-1 subjects (133 nondemented, 93 demented) and one shared subject-level 5-fold split:
 
@@ -73,7 +73,7 @@ OASIS-1 reference: D. S. Marcus et al., "Open Access Series of Imaging Studies (
 
 ```bibtex
 @misc{cao2026mri,
-  author = {Cao, Yu and Ling, Steve},
+  author = {Cao, Yu and Fu, Jinrong and Ling, Steve},
   title  = {How Much Does {MRI} Add Beyond the {MMSE}? A Cautionary Benchmark of Deep and
             Neuro-Fuzzy Dementia Classification on {OASIS-1}},
   note   = {Manuscript},
