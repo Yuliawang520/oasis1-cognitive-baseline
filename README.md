@@ -2,14 +2,14 @@
 
 Code, the subject-level cross-validation split, and out-of-fold model predictions for
 
-> Y. Cao, J. Fu, and S. Ling, "How Much Does MRI Add Beyond the MMSE? A Cautionary Benchmark of Deep and Neuro-Fuzzy Dementia Classification on OASIS-1," manuscript, 2026.
+> Y. Cao, J. Fu, and S. Ling, "Structural MRI Adds Little Beyond a Cognitive Score in Dementia Classification," manuscript, 2026.
 
-On 226 OASIS-1 subjects (133 nondemented, 93 demented) and one shared subject-level 5-fold split:
+On 226 OASIS-1 subjects (133 non-demented, 93 demented) and one shared subject-level 5-fold split:
 
 - The MMSE score, with no model fitted, reaches AUC 0.890. After Holm correction it significantly outperforms all six imaging-only models (five ImageNet-pretrained deep networks and a two-volume logistic regression) and both ANFIS configurations, and no model significantly outperforms it.
 - Adding hippocampal and whole-brain volume to the MMSE is statistically detectable (likelihood-ratio p = 0.0005), but the gain in discrimination is small and uncertain: AUC +0.025 (95% CI −0.003 to 0.053), and +0.035 (0.007 to 0.067) in subjects aged 60 or over.
 - A logistic regression on the ANFIS's three features (4 parameters) significantly outperforms the 126-parameter ANFIS (0.907 vs. 0.823, p = 0.0005).
-- Restricted to subjects aged 60 or over, the deep networks fall from AUC 0.68–0.76 to 0.61–0.68: part of their performance comes from age.
+- Restricted to subjects aged 60 or over, the deep networks fall from AUC 0.68–0.76 to 0.61–0.68, consistent with an age confound.
 
 ## Contents
 
@@ -74,8 +74,7 @@ OASIS-1 reference: D. S. Marcus et al., "Open Access Series of Imaging Studies (
 ```bibtex
 @misc{cao2026mri,
   author = {Cao, Yu and Fu, Jinrong and Ling, Steve},
-  title  = {How Much Does {MRI} Add Beyond the {MMSE}? A Cautionary Benchmark of Deep and
-            Neuro-Fuzzy Dementia Classification on {OASIS-1}},
+  title  = {Structural {MRI} Adds Little Beyond a Cognitive Score in Dementia Classification},
   note   = {Manuscript},
   year   = {2026}
 }
