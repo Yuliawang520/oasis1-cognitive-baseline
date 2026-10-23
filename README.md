@@ -10,16 +10,21 @@ On 226 OASIS-1 subjects (133 non-demented, 93 demented) and one shared subject-l
 - Adding hippocampal and whole-brain volume to the MMSE is statistically detectable (likelihood-ratio p = 0.0005), but the gain in discrimination is small and uncertain: AUC +0.025 (95% CI −0.003 to 0.053), and +0.035 (0.007 to 0.067) in subjects aged 60 or over.
 - A logistic regression on the ANFIS's three features (4 parameters) significantly outperforms the 126-parameter ANFIS (0.907 vs. 0.823, p = 0.0005).
 - Restricted to subjects aged 60 or over, the deep networks fall from AUC 0.68–0.76 to 0.61–0.68, consistent with an age confound.
+- Ablations of the ANFIS: rule bases of 8, 27 and 64 rules give AUCs of 0.814, 0.823 and 0.806, so the rule count matters little. A binary target in place of the CDR regression raises the AUC to 0.857, or 0.874 without SMOTE. The best variants still trail the logistic regression (p ≤ 0.018).
+- Across 100 repeated five-fold splits, every comparison among the tabular models keeps its direction in at least 98% of the splits.
+- Decision curves: adding the volumes to the MMSE raises the net benefit by at most 0.04 at thresholds from 0.1 to 0.6.
 
 ## Contents
 
 | Path | What it is |
 | --- | --- |
 | `notebooks/` | Google Colab notebooks that produced every model in the paper (see [Reproducing the paper](#reproducing-the-paper)) |
-| `scripts/evaluate.py` | Refits the five interpretable baselines and reproduces every table and figure of the paper, checking each value against `scripts/paper_values.json` |
+| `scripts/evaluate.py` | Refits the five interpretable baselines and reproduces the paper's main tables and Figs. 1 and 3, checking each value against `scripts/paper_values.json` |
+| `scripts/robustness.py` | ANFIS ablations, 100 repeated five-fold splits and decision curves (the ablation table, Fig. 2 and the repeated-split results of the paper) |
+| `scripts/anfis.py` | The ANFIS of the training notebook, with switches for the ablations; reproduces the released ANFIS outputs |
 | `data/folds.csv` | The subject-level 5-fold assignment shared by all twelve models |
 | `data/oof_predictions.csv` | Out-of-fold outputs of both ANFIS configurations and the five deep baselines |
-| `results/` | Output of `evaluate.py` (tables as CSV, `results.json`, Figs. 1 and 2), plus ANFIS rule tables and confusion matrices, and deep-baseline confusion matrices and training curves |
+| `results/` | Output of `evaluate.py` (tables as CSV, `results.json`, `fig_roc.pdf` and `fig_calib.pdf`, which are Figs. 1 and 3) and of `robustness.py` (`table_ablation.csv`, `table_dca.csv`, `table_repeated_cv_*.csv`, `robustness.json` and `fig_dca.pdf`, which is Fig. 2), plus ANFIS rule tables and confusion matrices, and deep-baseline confusion matrices and training curves |
 
 ### `data/` columns
 
@@ -52,6 +57,13 @@ Trained model weights are not included.
    ```
 
    The script prints every table and reports how many values match the paper: all 270 should match, or 256 without `--demographics`, which only the cohort table needs. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
+4. Reproduce the robustness analyses (needs torch and imbalanced-learn; about 25 minutes on a laptop CPU, because the repeated splits retrain the ANFIS 1000 times):
+
+   ```bash
+   python scripts/robustness.py --cohort path/to/oasis_master_features_labels.csv
+   ```
+
+   The script first re-trains the paper's ANFIS-on-GT and prints how closely it matches the released outputs. Tested with torch 2.8 (CPU) and imbalanced-learn 0.14.
 
 ## Analysis notes
 
@@ -61,6 +73,9 @@ Trained model weights are not included.
 - **Age sensitivity.** All comparisons are repeated on the 189 subjects aged 60 or over, using the same out-of-fold predictions.
 - **Baselines.** All baselines use train-fold-only age residualisation of the volumes and train-fold-only standardisation, as the ANFIS does. CART-3 uses `random_state=0`.
 - **Swin-T.** The Swin-T notebook up-weights the minority class by a further factor of 1.5 and early-stops on balanced accuracy, because with plain inverse-frequency weighting it collapsed to predicting the majority class.
+- **Ablations.** `scripts/anfis.py` reproduces the released ANFIS-on-GT outputs (AUC 0.8232; largest per-subject difference 9.6e-4, from GPU versus CPU arithmetic). Each variant changes the stated settings only and keeps the original optimiser settings. Variants with SMOTE are repeated with ten SMOTE random states. Statistics use the row order of `evaluate.py`, so the original configuration reproduces comparison F3 exactly.
+- **Repeated splits.** 100 stratified five-fold splits (`random_state` 0–99) for the five interpretable baselines, ANFIS-on-GT and the minimal ANFIS variant. The deep networks are not retrained.
+- **Decision curves.** Net benefit of LR-1, LR-3, LR-2 and the recalibrated ANFIS-on-GT on the shared split, with paired bootstrap CIs for LR-3 minus LR-1 at thresholds of 0.1 to 0.6. Net benefit is computed at the cohort prevalence (41%), which reflects OASIS-1 recruitment rather than a clinical population.
 - Comments in the notebooks are in Chinese.
 
 ## Acknowledgment
