@@ -20,7 +20,7 @@ On 226 OASIS-1 subjects (133 non-demented, 93 demented) and one shared subject-l
 | --- | --- |
 | `notebooks/` | Google Colab notebooks that produced every model in the paper (see [Reproducing the paper](#reproducing-the-paper)) |
 | `scripts/evaluate.py` | Refits the five interpretable baselines and reproduces the paper's main tables and Figs. 1 and 3, checking each value against `scripts/paper_values.json` |
-| `scripts/robustness.py` | ANFIS ablations, 100 repeated five-fold splits and decision curves (the ablation table, Fig. 2 and the repeated-split results of the paper) |
+| `scripts/robustness.py` | ANFIS ablations, 100 repeated five-fold splits and decision curves (Table IV and Fig. 2 of the paper, and Tables S2 and S3 of its Supplementary Material) |
 | `scripts/anfis.py` | The ANFIS of the training notebook, with switches for the ablations; reproduces the released ANFIS outputs |
 | `data/folds.csv` | The subject-level 5-fold assignment shared by all twelve models |
 | `data/oof_predictions.csv` | Out-of-fold outputs of both ANFIS configurations and the five deep baselines |
