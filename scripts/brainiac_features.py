@@ -139,18 +139,38 @@ def extract_features(nifti_paths, brainiac_src, checkpoint, device):
     import torch
     sys.path.insert(0, str(brainiac_src))
     from dataset import get_validation_transform  # noqa: E402  (BrainIAC repository)
-    from model import ViTBackboneNet  # noqa: E402
 
-    model = ViTBackboneNet(str(checkpoint)).to(device).eval()
+    backbone = load_backbone(checkpoint).to(device).eval()
     transform = get_validation_transform()
     token0, pooled = [], []
     with torch.no_grad():
         for p in nifti_paths:
             x = torch.as_tensor(transform({"image": str(p)})["image"]).unsqueeze(0).to(device)
-            tokens = model.backbone(x)[0]  # (1, 216, 768): no class token, as in the released model
+            tokens = backbone(x)[0]  # (1, 216, 768): no class token, as in the released model
             token0.append(tokens[:, 0].squeeze(0).cpu().numpy())
             pooled.append(tokens.mean(dim=1).squeeze(0).cpu().numpy())
     return np.vstack(token0), np.vstack(pooled)
+
+
+def load_backbone(checkpoint):
+    """The BrainIAC ViT-B backbone (same constructor arguments as BrainIAC's ViTBackboneNet) with the
+    SimCLR checkpoint weights. MONAI versions after 1.3 add `norm_cross_attn` layers to every transformer
+    block; they are unused without cross-attention, so only those keys may be missing from the checkpoint."""
+    import torch
+    from monai.networks.nets import ViT
+    backbone = ViT(in_channels=1, img_size=(96, 96, 96), patch_size=(16, 16, 16), hidden_size=768,
+                   mlp_dim=3072, num_layers=12, num_heads=12, save_attn=True)
+    ckpt = torch.load(str(checkpoint), map_location="cpu", weights_only=False)
+    state = ckpt.get("state_dict", ckpt)
+    weights = {k[len("backbone."):]: v for k, v in state.items() if k.startswith("backbone.")}
+    result = backbone.load_state_dict(weights, strict=False)
+    unexpected = list(result.unexpected_keys)
+    missing = [k for k in result.missing_keys if "norm_cross_attn" not in k]
+    if unexpected or missing:
+        raise SystemExit(f"checkpoint does not match the BrainIAC ViT-B: unexpected {unexpected[:5]}, missing {missing[:5]}")
+    print(f"BrainIAC backbone loaded: {len(weights)} tensors"
+          + (f" ({len(result.missing_keys)} unused norm_cross_attn tensors left at initialisation)" if result.missing_keys else ""))
+    return backbone
 
 
 def write_features(path, subjects, feats):
