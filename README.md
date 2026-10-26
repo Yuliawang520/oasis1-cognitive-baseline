@@ -23,6 +23,8 @@ The paper attributes the accuracy of thirteen dementia classifiers to four sourc
 | `scripts/evaluate.py` | Refits the four fitted baselines, computes the two zero-parameter references (MMSE alone, age alone) and reproduces the paper's main tables, Fig. 1 and Fig. S1, checking each value against `scripts/paper_values.json` |
 | `scripts/robustness.py` | ANFIS ablations, 100 repeated five-fold splits and decision curves (Table IV and Fig. 2 of the paper, and Tables S2 and S3 of its Supplementary Material) |
 | `scripts/anfis.py` | The ANFIS of the training notebook, with switches for the ablations; reproduces the released ANFIS outputs |
+| `scripts/brainiac_features.py` | Registers the FreeSurfer brain masks to the BrainIAC template and extracts frozen BrainIAC (ViT-B) features; run in Colab by `notebooks/brainiac_probe_features_colab.ipynb` |
+| `scripts/probe.py` | Linear probe of the frozen BrainIAC features on the shared split (3D imaging-only baseline): out-of-fold scores, family F5, nested MMSE + probe fusion and age diagnostics |
 | `data/folds.csv` | The subject-level 5-fold assignment shared by all thirteen models |
 | `data/oof_predictions.csv` | Out-of-fold outputs of both ANFIS configurations and the five deep baselines |
 | `results/` | Output of `evaluate.py` (tables as CSV including `table_f4_age.csv`, `results.json`, `fig_roc.pdf` and `fig_calib.pdf`, which are Fig. 1 and Fig. S1) and of `robustness.py` (`table_ablation.csv`, `table_dca.csv`, `table_repeated_cv_*.csv`, `robustness.json` and `fig_dca.pdf`, which is Fig. 2), plus ANFIS rule tables and confusion matrices, and deep-baseline confusion matrices and training curves |
@@ -65,6 +67,13 @@ Trained model weights are not included.
    ```
 
    The script first re-trains the paper's ANFIS-on-GT and prints how closely it matches the released outputs. Tested with torch 2.8 (CPU) and imbalanced-learn 0.14.
+5. BrainIAC linear probe (3D imaging-only baseline). Download `BrainIAC.ckpt` from the [BrainIAC repository](https://github.com/AIM-KannLab/BrainIAC) (non-commercial academic licence), run `notebooks/brainiac_probe_features_colab.ipynb` to register the 226 brain masks to the BrainIAC template and extract the frozen features (`brainiac_features.csv`, BrainIAC's own first-token representation; `brainiac_features_meanpool.csv`, mean of the 216 patch tokens), then fit the probe locally:
+
+   ```bash
+   python scripts/probe.py --cohort path/to/oasis_master_features_labels.csv --features path/to/brainiac_features.csv
+   ```
+
+   The feature CSVs are derived from OASIS images and are not part of the repository; the out-of-fold probe scores in `data/` are.
 
 ## Analysis notes
 
@@ -77,6 +86,7 @@ Trained model weights are not included.
 - **Swin-T.** The Swin-T notebook up-weights the minority class by a further factor of 1.5 and early-stops on balanced accuracy, because with plain inverse-frequency weighting it collapsed to predicting the majority class.
 - **Ablations.** `scripts/anfis.py` reproduces the released ANFIS-on-GT outputs (AUC 0.8232; largest per-subject difference 9.6e-4, from GPU versus CPU arithmetic). Each variant changes the stated settings only and keeps the original optimiser settings. Variants with SMOTE are repeated with ten SMOTE random states. Statistics use the row order of `evaluate.py`, so the original configuration reproduces comparison F3 exactly.
 - **Repeated splits.** 100 stratified five-fold splits (`random_state` 0–99) for the five interpretable baselines, ANFIS-on-GT and the minimal ANFIS variant. The deep networks are not retrained.
+- **BrainIAC probe.** Preprocessing follows BrainIAC's released pipeline (N4, rigid registration to its `temp_head.nii.gz` template with Mattes mutual information, whole volume resized to 96³, z-scored over non-zero voxels); HD-BET is skipped because `brainmask.mgz` is already skull-stripped. The probe is an L2 logistic regression on the standardised 768-dimensional features, fitted on the four training folds of the shared split with the penalty chosen by an inner five-fold cross-validation. Pre-specified comparisons (family F5, Holm within three per cohort): probe vs MMSE alone, vs age alone and vs LR-2, on all subjects and on those aged 60 or over. The MMSE + probe fusion uses nested stacking, so no training subject receives a probe score from a model that saw it. BrainIAC's pretraining pool includes ADNI, OASIS-2, OASIS-3 and MIRIAD, but not OASIS-1; the pretraining used no labels.
 - **Decision curves.** Net benefit of LR-1, LR-3, LR-2 and the recalibrated ANFIS-on-GT on the shared split, with paired bootstrap CIs for LR-3 minus LR-1 at thresholds of 0.1 to 0.6. Net benefit is computed at the cohort prevalence (41%), which reflects OASIS-1 recruitment rather than a clinical population.
 - Comments in the notebooks are in Chinese.
 
