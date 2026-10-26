@@ -7,9 +7,10 @@ Inputs
   --data          Directory with folds.csv and oof_predictions.csv (default: ../data).
 OASIS data cannot be redistributed, so neither input is part of the repository.
 
-The five interpretable baselines are refitted on the shared 5-fold split; the ANFIS and deep
-models are read from their out-of-fold predictions. Every reproduced value is compared with
-the value printed in the paper.
+The four fitted interpretable baselines are refitted on the shared 5-fold split, the two
+zero-parameter references (MMSE alone, age alone) are computed from the cohort file, and the
+ANFIS and deep models are read from their out-of-fold predictions. Every reproduced value is
+compared with the value printed in the paper.
 
 Usage: python scripts/evaluate.py --cohort path/to/oasis_master_features_labels.csv
 """
@@ -24,7 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2, norm, rankdata
+from scipy.stats import chi2, norm, rankdata, spearmanr
 from sklearn.calibration import calibration_curve
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import brier_score_loss, roc_auc_score, roc_curve
@@ -35,16 +36,18 @@ REPO = Path(__file__).resolve().parents[1]
 EVENTS = 93
 
 MODELS = ["LR-3", "MMSE alone", "LR-1", "CART-3", "ANFIS-on-GT", "ANFIS-on-extracted", "LR-2",
-          "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T"]
+          "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T", "Age alone"]
 GROUPS = {"Cognitive score only": ["MMSE alone", "LR-1"],
           "Cognitive score and imaging": ["LR-3", "CART-3", "ANFIS-on-GT", "ANFIS-on-extracted"],
-          "Imaging only": ["LR-2", "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T"]}
+          "Imaging only": ["LR-2", "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T"],
+          "Age only": ["Age alone"]}
 IMAGING_INPUT = GROUPS["Cognitive score and imaging"] + GROUPS["Imaging only"]
 DEEP_COLUMNS = {"DeiT-Small": "deit_small", "VGG-16": "vgg16", "ResNet-50": "resnet50",
                 "DenseNet-121": "densenet121", "Swin-T": "swin_t"}
+UNFITTED = ("MMSE alone", "Age alone")  # zero-parameter rankings, not probabilities
 PARAMS = {"LR-3": "4", "MMSE alone": "0", "LR-1": "2", "CART-3": "7", "ANFIS-on-GT": "126",
           "ANFIS-on-extracted": "126", "LR-2": "3", "DeiT-Small": "22M", "VGG-16": "138M",
-          "ResNet-50": "25M", "DenseNet-121": "8M", "Swin-T": "28M"}
+          "ResNet-50": "25M", "DenseNet-121": "8M", "Swin-T": "28M", "Age alone": "0"}
 
 # Okabe-Ito colours, distinguishable with colour-vision deficiency.
 BLACK, ORANGE, SKY, GREEN, BLUE, VERMILION, PURPLE, GREY = (
@@ -116,7 +119,8 @@ def load(cohort_csv, data_dir):
     }
     for name, col in DEEP_COLUMNS.items():
         scores[name] = scores_csv[col].to_numpy()
-    probs = {k: v for k, v in scores.items() if k != "MMSE alone"}  # probabilities for operating point, Brier
+    scores["Age alone"] = cohort["age"].to_numpy(dtype=float)  # older ranks as more likely demented
+    probs = {k: v for k, v in scores.items() if k not in UNFITTED}  # probabilities for operating point, Brier
     for name in ("ANFIS-on-GT", "ANFIS-on-extracted"):
         probs[name] = recalibrate(scores[name], y, folds)
     return cohort, y, folds, scores, probs
@@ -299,6 +303,27 @@ def age_table(cohort, y, scores):
     return pd.DataFrame.from_dict(rows, orient="index"), int(old.sum()), int(y[old].sum())
 
 
+def age_alone_table(cohort, y, scores, n_boot, seed):
+    """F4: age alone vs each deep network, on all subjects and on those aged 60 or over (Holm within
+    the five networks per cohort); plus the AUC of age alone and, as a diagnostic, the Spearman
+    correlation of every score with age within the non-demented subjects."""
+    age = scores["Age alone"]
+    deep = list(DEEP_COLUMNS)
+    rows, reference = {m: {} for m in deep}, {}
+    for label, mask in (("all", np.ones(len(y), bool)), ("60+", age >= 60)):
+        yy, a = y[mask], age[mask]
+        reference[label] = {"AUC": f"{roc_auc_score(yy, a):.3f}", "95% CI": bootstrap_ci(yy, a, n_boot, seed)}
+        ps = [delong_p(yy, a, scores[m][mask]) for m in deep]
+        for m, p, h in zip(deep, ps, holm(ps)):
+            rows[m].update({f"dAUC vs age ({label})": f"{roc_auc_score(yy, scores[m][mask]) - roc_auc_score(yy, a):+.3f}",
+                            f"95% CI ({label})": bootstrap_delta_ci(yy, scores[m][mask], a, n_boot, seed),
+                            f"p ({label})": fmt_p(p), f"Holm p ({label})": fmt_p(h)})
+        reference[label]["LR-2 vs age, p"] = fmt_p(delong_p(yy, a, scores["LR-2"][mask]))  # exploratory
+    non_demented = y == 0
+    rho = {m: f"{spearmanr(age[non_demented], scores[m][non_demented])[0]:+.2f}" for m in MODELS if m != "Age alone"}
+    return pd.DataFrame.from_dict(rows, orient="index"), reference, rho
+
+
 def epv_table(lr):
     rows = {}
     for name, params in (("LR-3", 4), ("CART-3", 7), ("ANFIS", 126)):
@@ -339,6 +364,7 @@ def plot_roc(y, scores, path):
         ax.plot(fpr, tpr, color=GREY, lw=0.6, alpha=0.9, zorder=2,
                 label=f"Deep ×5 ({min(deep_aucs)}–{max(deep_aucs)})" if i == 0 else None)
     curves = [  # drawn bottom to top; the legend lists them by AUC
+        ("Age alone", "Age alone", "0.3", 1.2, (0, (1.2, 1.4))),
         ("LR-2", "LR-2, imaging only", BLUE, 1.1, "-"),
         ("ANFIS-on-extracted", "ANFIS-on-extracted", PURPLE, 1.1, DASH_DOT),
         ("ANFIS-on-GT", "ANFIS-on-GT", VERMILION, 1.3, DASH_DOT),
@@ -426,7 +452,7 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
 
     cohort, y, folds, scores, probs = load(args.cohort, args.data)
-    assert y.sum() == EVENTS and len(y) == 226, "unexpected cohort"
+    assert y.sum() == EVENTS and len(y) == 226 and len(scores) == len(MODELS) == 13, "unexpected cohort"
     results = {}
     with pd.option_context("display.width", 220, "display.max_columns", 30):
         if args.demographics:
@@ -469,6 +495,12 @@ def main():
         print(f"\nAged 60 or over (n = {n_old}, {events_old} demented)\n", age.to_string())
         age.to_csv(args.out / "table_age60.csv", index_label="Model")
         results["age60"] = age.to_dict(orient="index")
+
+        f4, reference, rho = age_alone_table(cohort, y, scores, args.n_boot, args.seed)
+        print("\nF4: each deep network vs age alone (Holm within the five networks, per cohort)\n", f4.to_string())
+        print("Age alone", json.dumps(reference), "\nSpearman rho with age within the non-demented", json.dumps(rho))
+        f4.to_csv(args.out / "table_f4_age.csv", index_label="Model")
+        results.update({"F4": f4.to_dict(orient="index"), "age_alone": reference, "rho_age_non_demented": rho})
 
     style()
     plot_roc(y, scores, args.out / "fig_roc.pdf")
