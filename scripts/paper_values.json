@@ -164,6 +164,18 @@
    "Slope": "0.81",
    "Intercept": "-0.04"
   },
+  "BrainIAC probe": {
+   "Params": "769",
+   "AUC": "0.7438",
+   "95% CI": "[0.677, 0.806]",
+   "Fold AUC": "0.746 ± 0.081",
+   "Acc.": "0.615",
+   "Sens.": "0.108",
+   "Spec.": "0.970",
+   "Brier": "0.228",
+   "Slope": "3.69",
+   "Intercept": "0.89"
+  },
   "Age alone": {
    "Params": "0",
    "AUC": "0.6650",
@@ -416,6 +428,12 @@
    "p vs MMSE": "<0.0001",
    "Holm p": "<0.0001"
   },
+  "BrainIAC probe": {
+   "AUC (all)": "0.744",
+   "AUC (60+)": "0.669",
+   "p vs MMSE": "---",
+   "Holm p": "---"
+  },
   "Age alone": {
    "AUC (all)": "0.665",
    "AUC (60+)": "0.536",
@@ -499,6 +517,7 @@
   "VGG-16": "+0.79",
   "ResNet-50": "+0.75",
   "DenseNet-121": "+0.79",
-  "Swin-T": "+0.55"
+  "Swin-T": "+0.55",
+  "BrainIAC probe": "+0.64"
  }
 }

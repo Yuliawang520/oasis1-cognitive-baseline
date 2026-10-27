@@ -9,8 +9,8 @@ OASIS data cannot be redistributed, so neither input is part of the repository.
 
 The four fitted interpretable baselines are refitted on the shared 5-fold split, the two
 zero-parameter references (MMSE alone, age alone) are computed from the cohort file, and the
-ANFIS and deep models are read from their out-of-fold predictions. Every reproduced value is
-compared with the value printed in the paper.
+ANFIS, deep and BrainIAC-probe models are read from their out-of-fold predictions. Every
+reproduced value is compared with the value printed in the paper.
 
 Usage: python scripts/evaluate.py --cohort path/to/oasis_master_features_labels.csv
 """
@@ -35,19 +35,22 @@ from sklearn.tree import DecisionTreeClassifier
 REPO = Path(__file__).resolve().parents[1]
 EVENTS = 93
 
+PROBE = "BrainIAC probe"  # linear probe of frozen BrainIAC features (scripts/probe.py), added after the primary analyses
 MODELS = ["LR-3", "MMSE alone", "LR-1", "CART-3", "ANFIS-on-GT", "ANFIS-on-extracted", "LR-2",
-          "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T", "Age alone"]
+          "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T", PROBE, "Age alone"]
 GROUPS = {"Cognitive score only": ["MMSE alone", "LR-1"],
           "Cognitive score and imaging": ["LR-3", "CART-3", "ANFIS-on-GT", "ANFIS-on-extracted"],
-          "Imaging only": ["LR-2", "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T"],
+          "Imaging only": ["LR-2", "DeiT-Small", "VGG-16", "ResNet-50", "DenseNet-121", "Swin-T", PROBE],
           "Age only": ["Age alone"]}
-IMAGING_INPUT = GROUPS["Cognitive score and imaging"] + GROUPS["Imaging only"]
+# Family F1 (MMSE alone vs each model with imaging inputs) keeps its original ten members; the probe has
+# its own pre-specified family F5 in scripts/probe.py.
+IMAGING_INPUT = GROUPS["Cognitive score and imaging"] + [m for m in GROUPS["Imaging only"] if m != PROBE]
 DEEP_COLUMNS = {"DeiT-Small": "deit_small", "VGG-16": "vgg16", "ResNet-50": "resnet50",
                 "DenseNet-121": "densenet121", "Swin-T": "swin_t"}
 UNFITTED = ("MMSE alone", "Age alone")  # zero-parameter rankings, not probabilities
 PARAMS = {"LR-3": "4", "MMSE alone": "0", "LR-1": "2", "CART-3": "7", "ANFIS-on-GT": "126",
           "ANFIS-on-extracted": "126", "LR-2": "3", "DeiT-Small": "22M", "VGG-16": "138M",
-          "ResNet-50": "25M", "DenseNet-121": "8M", "Swin-T": "28M", "Age alone": "0"}
+          "ResNet-50": "25M", "DenseNet-121": "8M", "Swin-T": "28M", PROBE: "769", "Age alone": "0"}
 
 # Okabe-Ito colours, distinguishable with colour-vision deficiency.
 BLACK, ORANGE, SKY, GREEN, BLUE, VERMILION, PURPLE, GREY = (
@@ -119,6 +122,9 @@ def load(cohort_csv, data_dir):
     }
     for name, col in DEEP_COLUMNS.items():
         scores[name] = scores_csv[col].to_numpy()
+    probe = scores_csv[["subject_id"]].merge(pd.read_csv(data_dir / "oof_probe_brainiac_probe.csv"),
+                                             on="subject_id", how="left", validate="1:1")
+    scores[PROBE] = probe["brainiac_probe"].to_numpy()  # out-of-fold probabilities of the probe
     scores["Age alone"] = cohort["age"].to_numpy(dtype=float)  # older ranks as more likely demented
     probs = {k: v for k, v in scores.items() if k not in UNFITTED}  # probabilities for operating point, Brier
     for name in ("ANFIS-on-GT", "ANFIS-on-extracted"):
@@ -365,6 +371,7 @@ def plot_roc(y, scores, path):
                 label=f"Deep ×5 ({min(deep_aucs)}–{max(deep_aucs)})" if i == 0 else None)
     curves = [  # drawn bottom to top; the legend lists them by AUC
         ("Age alone", "Age alone", "0.3", 1.2, (0, (1.2, 1.4))),
+        (PROBE, "BrainIAC probe", "0.3", 1.1, (0, (4, 1.5))),
         ("LR-2", "LR-2, imaging only", BLUE, 1.1, "-"),
         ("ANFIS-on-extracted", "ANFIS-on-extracted", PURPLE, 1.1, DASH_DOT),
         ("ANFIS-on-GT", "ANFIS-on-GT", VERMILION, 1.3, DASH_DOT),
@@ -452,7 +459,7 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
 
     cohort, y, folds, scores, probs = load(args.cohort, args.data)
-    assert y.sum() == EVENTS and len(y) == 226 and len(scores) == len(MODELS) == 13, "unexpected cohort"
+    assert y.sum() == EVENTS and len(y) == 226 and len(scores) == len(MODELS) == 14, "unexpected cohort"
     results = {}
     with pd.option_context("display.width", 220, "display.max_columns", 30):
         if args.demographics:

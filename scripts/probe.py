@@ -41,7 +41,10 @@ from sklearn.preprocessing import StandardScaler
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import evaluate as ev  # noqa: E402
 
-C_GRID = (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0)
+C_GRID = (1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0)
+# The grid specified before the features existed was 1e-4 to 10; the inner cross-validation chose its
+# lower boundary in every fold, so the grid was extended downwards (primary analysis). Pass
+# --c-grid 1e-4,1e-3,1e-2,1e-1,1,10 to reproduce the original grid as a sensitivity analysis.
 
 
 def make_probe(c, n_pca=None):
@@ -66,11 +69,11 @@ def predict_steps(steps, x):
     return steps[-1].predict_proba(x)[:, 1]
 
 
-def choose_c(x, y, n_pca, seed):
+def choose_c(x, y, n_pca, seed, c_grid=C_GRID):
     """Inner five-fold CV on the training folds; returns the C with the highest mean AUC."""
     inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
     means = {}
-    for c in C_GRID:
+    for c in c_grid:
         aucs = []
         for tr, va in inner.split(x, y):
             steps = fit_steps(make_probe(c, n_pca), x[tr], y[tr])
@@ -79,11 +82,11 @@ def choose_c(x, y, n_pca, seed):
     return max(means, key=means.get), means
 
 
-def probe_oof(x, y, folds, n_pca, seed):
+def probe_oof(x, y, folds, n_pca, seed, c_grid=C_GRID):
     oof, chosen = np.zeros(len(y)), {}
     for k in np.unique(folds):
         train, test = folds != k, folds == k
-        c, _ = choose_c(x[train], y[train], n_pca, seed)
+        c, _ = choose_c(x[train], y[train], n_pca, seed, c_grid)
         chosen[int(k)] = c
         steps = fit_steps(make_probe(c, n_pca), x[train], y[train])
         oof[test] = predict_steps(steps, x[test])
@@ -146,6 +149,7 @@ def main():
     ap.add_argument("--features", type=Path, required=True)
     ap.add_argument("--name", default="BrainIAC probe")
     ap.add_argument("--pca", type=int, default=None, help="optional PCA dimension before the logistic regression")
+    ap.add_argument("--c-grid", default=None, help="comma-separated penalty grid (default: 1e-6 to 10)")
     ap.add_argument("--data", type=Path, default=ev.REPO / "data")
     ap.add_argument("--out", type=Path, default=ev.REPO / "results")
     ap.add_argument("--n-boot", type=int, default=5000)
@@ -165,14 +169,15 @@ def main():
     mmse, age = cohort["mmse"].to_numpy(dtype=float), cohort["age"].to_numpy(dtype=float)
     print(f"{args.name}: {x.shape[1]} features, {len(y)} subjects, {y.sum()} demented")
 
-    oof, chosen = probe_oof(x, y, folds, args.pca, args.seed)
+    c_grid = tuple(float(c) for c in args.c_grid.split(",")) if args.c_grid else C_GRID
+    oof, chosen = probe_oof(x, y, folds, args.pca, args.seed, c_grid)
     fused = fusion_oof(x, mmse, y, folds, chosen, args.pca, oof)
     scores[args.name], scores["MMSE + " + args.name] = oof, fused
     print("penalty C per fold:", chosen)
 
     old = age >= 60
-    results = {"name": args.name, "n_features": int(x.shape[1]), "pca": args.pca, "C_per_fold": chosen,
-               "n": int(len(y)), "events": int(y.sum())}
+    results = {"name": args.name, "n_features": int(x.shape[1]), "pca": args.pca, "C_grid": list(c_grid),
+               "C_per_fold": chosen, "n": int(len(y)), "events": int(y.sum())}
     table = {}
     for label, mask in (("all", np.ones(len(y), bool)), ("60+", old)):
         yy, po, fu = y[mask], oof[mask], fused[mask]
@@ -205,8 +210,8 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / f"probe_{slug}.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     pd.DataFrame.from_dict(table, orient="index").to_csv(args.out / f"table_probe_{slug}.csv", index_label="Comparison")
-    pd.DataFrame({"subject_id": cohort["subject_id"], "fold": folds, slug: np.round(oof, 6),
-                  f"mmse_plus_{slug}": np.round(fused, 6)}).to_csv(args.data / f"oof_probe_{slug}.csv", index=False)
+    pd.DataFrame({"subject_id": cohort["subject_id"], "fold": folds, slug: oof,
+                  f"mmse_plus_{slug}": fused}).to_csv(args.data / f"oof_probe_{slug}.csv", index=False, float_format="%.10g")
     print(json.dumps(results, indent=1))
 
 
