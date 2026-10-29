@@ -2,7 +2,7 @@
 
 Code, the subject-level cross-validation split, and out-of-fold model predictions for
 
-> Y. Cao, J. Fu, and S. Ling, "Cognitive Score and Age, Not Architecture, Explain the Accuracy of MRI Dementia Classifiers," manuscript, 2026.
+> Y. Cao, J. Fu, and S. Ling, "An Input-Attribution Framework for Dementia Classifiers: Cognitive Score and Age, Not Architecture, Explain MRI Model Accuracy," manuscript, 2026.
 
 The paper attributes the accuracy of thirteen dementia classifiers to four sources: the cognitive score given as input, the age of the subjects, the images and the model architecture. On 226 OASIS-1 subjects (133 non-demented, 93 demented) and one shared subject-level 5-fold split:
 
@@ -26,6 +26,8 @@ The paper attributes the accuracy of thirteen dementia classifiers to four sourc
 | `scripts/anfis.py` | The ANFIS of the training notebook, with switches for the ablations; reproduces the released ANFIS outputs |
 | `scripts/brainiac_features.py` | Registers the FreeSurfer brain masks to the BrainIAC template and extracts frozen BrainIAC (ViT-B) features; run in Colab by `notebooks/brainiac_probe_features_colab.ipynb` |
 | `scripts/probe.py` | Linear probe of the frozen BrainIAC features on the shared split (3D imaging-only baseline): out-of-fold scores, family F5, nested MMSE + probe fusion and age diagnostics |
+| `scripts/adni_build_volumes.py` | Builds the ADNI baseline volume table (hippocampus, BrainSegVol, ICV) from the ADSP PHC FreeSurfer table of the ADNIMERGE2 R data package |
+| `scripts/adni_replication.py` | External replication of the tabular attribution on the ADNI1 baseline cohort (zero-parameter references, LR-1/2/3, CART-3, ANFIS; families A1–A4). ADNI data cannot be redistributed; the committed files in `results/adni/` hold aggregate statistics only, and the fold assignment with ADNI subject IDs is git-ignored |
 | `data/folds.csv` | The subject-level 5-fold assignment shared by all thirteen models |
 | `data/oof_predictions.csv` | Out-of-fold outputs of both ANFIS configurations and the five deep baselines |
 | `data/oof_probe_*.csv` | Out-of-fold scores of the BrainIAC probe (primary analysis, the original penalty grid and the mean-pooled variant) and of the MMSE + probe fusion |
@@ -76,6 +78,15 @@ Trained model weights are not included.
    ```
 
    The feature CSVs are derived from OASIS images and are not part of the repository; the out-of-fold probe scores in `data/` are.
+6. ADNI replication (needs an approved IDA account). Download the ADNIMERGE2 R data package from the IDA and extract it; build the clinical metadata of the ADNI1 "Complete 1Yr 1.5T" participants (`subject_id`, `timepoint`, `age_exact`, `mmscore`, `cdglobal`) as in the longitudinal ADNI notebooks; then:
+
+   ```bash
+   pip install pyreadr
+   python scripts/adni_build_volumes.py --package path/to/ADNIMERGE2 --clinical path/to/clinical_metadata.csv --out adni_volumes_bl.csv
+   python scripts/adni_replication.py --clinical path/to/clinical_metadata.csv --adnimerge adni_volumes_bl.csv --anfis
+   ```
+
+   The committed outputs in `results/adni/` contain aggregate statistics only (Table VI and Table S7 of the paper); `adni_folds.csv`, which lists ADNI subject IDs, is git-ignored and is reproducible from the fixed random state.
 
 ## Analysis notes
 
@@ -103,7 +114,7 @@ OASIS-1 reference: D. S. Marcus et al., "Open Access Series of Imaging Studies (
 ```bibtex
 @misc{cao2026mri,
   author = {Cao, Yu and Fu, Jinrong and Ling, Steve},
-  title  = {Cognitive Score and Age, Not Architecture, Explain the Accuracy of {MRI} Dementia Classifiers},
+  title  = {An Input-Attribution Framework for Dementia Classifiers: Cognitive Score and Age, Not Architecture, Explain {MRI} Model Accuracy},
   note   = {Manuscript},
   year   = {2026}
 }

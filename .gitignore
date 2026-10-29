@@ -17,3 +17,6 @@ oof_predictions_baseline_*.csv
 # Python / Jupyter
 __pycache__/
 .ipynb_checkpoints/
+
+# ADNI data must not be committed (ADNI Data Use Agreement)
+results/adni/adni_folds.csv
