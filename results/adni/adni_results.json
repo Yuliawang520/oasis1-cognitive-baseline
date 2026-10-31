@@ -15,6 +15,12 @@
    "Fold AUC": "0.469 \u00b1 0.049",
    "rho with age, CDR 0": "+1.00"
   },
+  "Age U-score": {
+   "AUC": "0.637",
+   "95% CI": "[0.590, 0.684]",
+   "Fold AUC": "0.638 \u00b1 0.041",
+   "rho with age, CDR 0": "+0.14"
+  },
   "LR-1": {
    "AUC": "0.877",
    "95% CI": "[0.849, 0.903]",
@@ -45,6 +51,15 @@
    "Fold AUC": "0.885 \u00b1 0.019",
    "rho with age, CDR 0": "+0.08"
   }
+ },
+ "age structure": {
+  "median age": "75.4",
+  "age SD, CDR 0": "5.0",
+  "age SD, CDR > 0": "7.2",
+  "under 70: n": 104,
+  "under 70: CDR > 0": 96,
+  "80 or over: n": 147,
+  "80 or over: CDR > 0": 109
  },
  "A1: MMSE alone vs models with imaging inputs": {
   "LR-3": {

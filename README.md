@@ -63,7 +63,7 @@ Trained model weights are not included.
        --demographics path/to/oasis_cross-sectional.xlsx
    ```
 
-   The script prints every table and reports how many values match the paper: all 361 should match, or 347 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
+   The script prints every table and reports how many values match the paper: all 367 should match, or 353 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
 4. Reproduce the robustness analyses (needs torch and imbalanced-learn; about 25 minutes on a laptop CPU, because the repeated splits retrain the ANFIS 1000 times):
 
    ```bash
@@ -87,6 +87,22 @@ Trained model weights are not included.
    ```
 
    The committed outputs in `results/adni/` contain aggregate statistics only (Table VI and Table S7 of the paper); `adni_folds.csv`, which lists ADNI subject IDs, is git-ignored and is reproducible from the fixed random state.
+
+## Slice networks on ADNI1 and seed sensitivity (pre-registered)
+
+`docs/prespecification_networks_adni.md` fixes, before any training, how the five slice-based networks are re-run with seeds on OASIS-1 and trained on the 601 ADNI1 participants of the tabular replication (families A5 to A7, learning curve, shortcut diagnostics). Files:
+
+| File | Purpose |
+|---|---|
+| `scripts/adni_network_cohort.py` | Builds the ADNI cohort file (participant, fold, label, site, scanner, baseline image path); the output stays outside the repository |
+| `scripts/adni_slices.py` | HD-BET mask, FreeSurfer-style conform, white-matter peak at 110, then the 24 coronal slices of the OASIS-1 pipeline, with QC |
+| `notebooks/adni_slices_colab.ipynb` | Colab driver for the slice extraction (GPU) |
+| `scripts/slice_networks.py` | Seeded re-implementation of the five baseline notebooks (seeds, ADNI cohort, training-pool subsampling, resumable runs) |
+| `notebooks/slice_networks_multiseed_colab.ipynb` | Colab driver for the run matrix on either cohort (A100) |
+| `scripts/adni_networks_eval.py` | ADNI1 evaluation: A5 to A7, increment over the MMSE, learning curve, scanner and site diagnostics |
+| `scripts/network_seeds_eval.py` | OASIS-1 seed sensitivity (Table S8) and stability of families F1 and F4 |
+
+Terminology: the original notebooks call the 24 slices "axial". A FreeSurfer-conformed volume is LIA-oriented, so `vol[:, :, k]` is a coronal slice (posterior to anterior). The code, not the label, defined the pipeline; `scripts/adni_slices.py` reproduces the original PNGs to within one grey level, and the paper now says "coronal".
 
 ## Analysis notes
 

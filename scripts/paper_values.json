@@ -519,5 +519,13 @@
   "DenseNet-121": "+0.79",
   "Swin-T": "+0.55",
   "BrainIAC probe": "+0.64"
+ },
+ "raw_volume_lr2": {
+  "AUC": "0.832",
+  "AUC (60+)": "0.775",
+  "dAUC vs LR-2 (all)": "+0.061",
+  "dAUC vs LR-2 (60+)": "-0.025",
+  "rho with age, non-demented": "+0.74",
+  "AUC young (<60) vs old non-demented": "0.871"
  }
 }

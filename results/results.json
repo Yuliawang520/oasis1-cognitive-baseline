@@ -1,4 +1,24 @@
 {
+ "cohort": {
+  "Nondemented": {
+   "n": "133",
+   "Female, n (%)": "97 (72.9)",
+   "Age, mean ± SD (range)": "68.8 ± 13.8 (33–94)",
+   "Aged under 60, n": "37",
+   "Education (1–5), mean ± SD": "3.44 ± 1.27",
+   "MMSE, mean ± SD": "29.1 ± 1.1",
+   "CDR 0 / 0.5 / 1 / 2, n": "133 / 0 / 0 / 0"
+  },
+  "Demented": {
+   "n": "93",
+   "Female, n (%)": "54 (58.1)",
+   "Age, mean ± SD (range)": "76.7 ± 7.3 (62–96)",
+   "Aged under 60, n": "0",
+   "Education (1–5), mean ± SD": "2.78 ± 1.28",
+   "MMSE, mean ± SD": "24.5 ± 4.1",
+   "CDR 0 / 0.5 / 1 / 2, n": "0 / 68 / 23 / 2"
+  }
+ },
  "models": {
   "LR-3": {
    "Params": "4",
@@ -499,5 +519,13 @@
   "DenseNet-121": "+0.79",
   "Swin-T": "+0.55",
   "BrainIAC probe": "+0.64"
+ },
+ "raw_volume_lr2": {
+  "AUC": "0.832",
+  "AUC (60+)": "0.775",
+  "dAUC vs LR-2 (all)": "+0.061",
+  "dAUC vs LR-2 (60+)": "-0.025",
+  "rho with age, non-demented": "+0.74",
+  "AUC young (<60) vs old non-demented": "0.871"
  }
 }

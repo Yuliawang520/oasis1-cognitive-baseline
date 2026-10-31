@@ -17,7 +17,8 @@ Comparison families (Holm within each family):
   A2  LR-3 vs LR-1, with the likelihood-ratio test of the two volume coefficients
   A3  LR-3 vs ANFIS on identical inputs
   A4  age alone vs each imaging-only model (LR-2)
-Diagnostic: Spearman correlation of every model output with age within the CDR 0 subjects.
+Diagnostic: Spearman correlation of every model output with age within the CDR 0 subjects; the zero-parameter
+'Age U-score' (|age - median age|) measures the non-monotonic age information of the cohort.
 
 Usage: python scripts/adni_replication.py --clinical path/to/clinical_metadata.csv [--adnimerge path/to/ADNIMERGE.csv] [--anfis]
 """
@@ -73,6 +74,8 @@ def fit_models(cohort, volumes, use_anfis):
     tree = lambda: DecisionTreeClassifier(max_depth=3, class_weight="balanced", random_state=0)
     scores = {"MMSE alone": ((30 - cohort["mmse"]) / 30).to_numpy(),
               "Age alone": cohort["age"].to_numpy(dtype=float),
+              # non-monotonic age reference: distance from the median age (ADNI1 enrols few controls under 70)
+              "Age U-score": np.abs(cohort["age"].to_numpy(dtype=float) - np.median(cohort["age"].to_numpy(dtype=float))),
               "LR-1": ev.out_of_fold(cohort, {"mmse": "mmse"}, logistic)}
     if volumes:
         scores["LR-3"] = ev.out_of_fold(cohort, THREE, logistic)
@@ -122,7 +125,12 @@ def main():
         models[name] = {"AUC": f"{roc_auc_score(y, s):.3f}", "95% CI": ev.bootstrap_ci(y, s, args.n_boot, args.seed),
                         "Fold AUC": f"{np.mean(per_fold):.3f} ± {np.std(per_fold, ddof=1):.3f}",
                         "rho with age, CDR 0": f"{spearmanr(age[y == 0], s[y == 0])[0]:+.2f}"}
-    results = {"n": int(len(y)), "events": int(y.sum()), "volumes": volumes, "models": models}
+    under70 = age < 70
+    results = {"n": int(len(y)), "events": int(y.sum()), "volumes": volumes, "models": models,
+               "age structure": {"median age": f"{np.median(age):.1f}",
+                                 "age SD, CDR 0": f"{age[y == 0].std(ddof=1):.1f}", "age SD, CDR > 0": f"{age[y == 1].std(ddof=1):.1f}",
+                                 "under 70: n": int(under70.sum()), "under 70: CDR > 0": int(y[under70].sum()),
+                                 "80 or over: n": int((age >= 80).sum()), "80 or over: CDR > 0": int(y[age >= 80].sum())}}
 
     if volumes:
         imaging = [m for m in ("LR-3", "CART-3", "ANFIS", "LR-2") if m in scores]

@@ -330,6 +330,26 @@ def age_alone_table(cohort, y, scores, n_boot, seed):
     return pd.DataFrame.from_dict(rows, orient="index"), reference, rho
 
 
+def raw_volume_table(cohort, y, folds, scores):
+    """Diagnostic for Section IV-F: a logistic regression on the two raw volumes, standardised on the training
+    fold but NOT residualised on age. Its accuracy, its loss in the subjects aged 60 or over and its correlation
+    with age within the non-demented subjects show what an uncorrected volume model inherits from the age
+    structure of OASIS-1; the networks see uncorrected images, so this is their input-matched benchmark."""
+    x = cohort[["aseg_hippo_total", "wbv_final"]].to_numpy(dtype=float)
+    out = np.zeros(len(y))
+    for k in np.unique(folds):
+        tr, te = folds != k, folds == k
+        sc = StandardScaler().fit(x[tr])
+        out[te] = LogisticRegression(max_iter=1000).fit(sc.transform(x[tr]), y[tr]).predict_proba(sc.transform(x[te]))[:, 1]
+    age = cohort["age"].to_numpy(dtype=float)
+    old, nd = age >= 60, y == 0
+    return {"AUC": f"{roc_auc_score(y, out):.3f}", "AUC (60+)": f"{roc_auc_score(y[old], out[old]):.3f}",
+            "dAUC vs LR-2 (all)": f"{roc_auc_score(y, out) - roc_auc_score(y, scores['LR-2']):+.3f}",
+            "dAUC vs LR-2 (60+)": f"{roc_auc_score(y[old], out[old]) - roc_auc_score(y[old], scores['LR-2'][old]):+.3f}",
+            "rho with age, non-demented": f"{spearmanr(age[nd], out[nd])[0]:+.2f}",
+            "AUC young (<60) vs old non-demented": f"{roc_auc_score((age[nd] >= 60).astype(int), out[nd]):.3f}"}
+
+
 def epv_table(lr):
     rows = {}
     for name, params in (("LR-3", 4), ("CART-3", 7), ("ANFIS", 126)):
@@ -508,6 +528,10 @@ def main():
         print("Age alone", json.dumps(reference), "\nSpearman rho with age within the non-demented", json.dumps(rho))
         f4.to_csv(args.out / "table_f4_age.csv", index_label="Model")
         results.update({"F4": f4.to_dict(orient="index"), "age_alone": reference, "rho_age_non_demented": rho})
+
+        raw = raw_volume_table(cohort, y, folds, scores)
+        print("\nRaw-volume logistic regression (no age residualisation)", json.dumps(raw))
+        results["raw_volume_lr2"] = raw
 
     style()
     plot_roc(y, scores, args.out / "fig_roc.pdf")
