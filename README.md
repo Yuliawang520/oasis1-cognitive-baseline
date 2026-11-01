@@ -95,6 +95,7 @@ Trained model weights are not included.
 | File | Purpose |
 |---|---|
 | `scripts/adni_network_cohort.py` | Builds the ADNI cohort file (participant, fold, label, site, scanner, baseline image path); the output stays outside the repository |
+| `scripts/adni_pack_t1.py` | Packs the 601 baseline T1 images as RAS-oriented gzipped NIfTI (about 12 GB instead of 22 GB) for the upload to Drive; output stays outside the repository |
 | `scripts/adni_slices.py` | HD-BET mask, FreeSurfer-style conform, white-matter peak at 110, then the 24 coronal slices of the OASIS-1 pipeline, with QC |
 | `notebooks/adni_slices_colab.ipynb` | Colab driver for the slice extraction (GPU) |
 | `scripts/slice_networks.py` | Seeded re-implementation of the five baseline notebooks (seeds, ADNI cohort, training-pool subsampling, resumable runs) |
