@@ -27,8 +27,9 @@ age and |age − median|.
   Scaled), one image per participant chosen by `adni_01_build_manifest.py` of the longitudinal project (first
   pipeline run, B1-corrected and GradWarped versions preferred, MPR before MPR-R).
 - OASIS-1: the 226 subjects, the shared split and the existing slice PNGs of the original notebooks.
-- Scanner manufacturer and model (ADNIMERGE2 MRIQC, screening MPRAGE series) and site (first three characters of
-  the participant ID) are recorded for the diagnostics.
+- Scanner manufacturer and model (the IDA metadata XML of the baseline image itself; the ADNIMERGE2 MRIQC
+  table, screening MPRAGE series, only for images without an XML) and site (first three characters of the
+  participant ID) are recorded for the diagnostics.
 
 ## Pipeline
 
@@ -73,8 +74,8 @@ differences from 5000 paired bootstrap replicates (seed 0), as in the manuscript
 - **Learning curve (Q2):** ΔAUC (full pool minus 181) per network with a paired bootstrap CI; the five networks'
   mean ΔAUC is the summary statistic.
 - **Shortcut diagnostics** within the 191 CDR 0 participants: Spearman ρ of the ensemble output with age and with
-  |age − median|; Kruskal–Wallis test of the output across manufacturers and across sites with at least ten
-  participants. The within-CDR 0 ρ of a logistic regression on the two raw (non-residualised) volumes, 0.38, is
+  |age − median|; Kruskal–Wallis test of the output across manufacturers and across sites with at least five
+  participants of the class under test (within CDR 0 and, separately, within CDR > 0). The within-CDR 0 ρ of a logistic regression on the two raw (non-residualised) volumes, 0.38, is
   the benchmark for "atrophy that correlates with age".
 - **Q3 (OASIS-1 seeds):** per-seed AUC, mean ± SD and range for each network; whether the original unseeded run
   lies inside the seed range; families F1 (versus MMSE), F4 (versus age alone, all subjects and aged 60 or over)
@@ -106,4 +107,25 @@ differences from 5000 paired bootstrap replicates (seed 0), as in the manuscript
 
 ## Deviations
 
-(none yet)
+Recorded before any network output existed.
+
+- 2026-11-02, scanner metadata. The first cohort file took manufacturer and model from the ADNIMERGE2 MRIQC
+  table (most frequent value over a participant's screening MPRAGE series). That left 136 of the 601 participants
+  without a manufacturer and, for 9 participants who also took part in the ADNI1 3 T sub-study, named the 3 T
+  scanner rather than the 1.5 T image used here. The cohort file now takes both from the IDA metadata XML of the
+  exact baseline image (601 of 601 matched; GE 300, Siemens 236, Philips 65; MRIQC kept as fallback). Folds,
+  labels and image paths are unchanged. The field strength and the in-plane pixel spacing (0.94 mm for 350
+  participants, 1.25 mm for 220) are stored for information only; no test on them is pre-specified.
+- 2026-11-02, documentation of the site threshold. The text above said "sites with at least ten participants";
+  the tagged code (`scripts/adni_networks_eval.py`, `MIN_SITE = 5`) has used five participants of the class
+  under test since the pipeline test on synthetic runs, because no site has ten CDR 0 participants. The text
+  now states what the code does; the code is unchanged.
+
+## Checkpoints
+
+- 2026-11-02, slice QC on Colab (A100, HD-BET with test-time augmentation): 601 of 601 participants produced
+  24 slices; the FOV-centred window 69–119 lay inside the brain for every participant (0 %, fallback threshold
+  10 %), so the FOV-centred slices remain the primary input. In the six-participant preview the window covered
+  25–55 % of each brain's anterior–posterior extent, against 23–53 % in 40 local OASIS-1 volumes. All 601 source
+  images are float32 with continuous values (no integer quantisation), so the white-matter normalisation is safe
+  for the low-intensity-scale scanners (raw white-matter peak 33–2952).
