@@ -157,7 +157,7 @@ def main():
     args = ap.parse_args()
     slug = re.sub(r"[^a-z0-9]+", "_", args.name.lower()).strip("_")
 
-    cohort, y, folds, scores, _probs = ev.load(args.cohort, args.data)
+    cohort, y, folds, scores, _probs, _runs = ev.load(args.cohort, args.data)
     feats = pd.read_csv(args.features)
     feats = cohort[["subject_id"]].merge(feats, on="subject_id", how="left", validate="1:1")
     have = feats.drop(columns="subject_id").notna().all(axis=1).to_numpy()

@@ -48,6 +48,8 @@ IMAGING_INPUT = GROUPS["Cognitive score and imaging"] + [m for m in GROUPS["Imag
 DEEP_COLUMNS = {"DeiT-Small": "deit_small", "VGG-16": "vgg16", "ResNet-50": "resnet50",
                 "DenseNet-121": "densenet121", "Swin-T": "swin_t"}
 UNFITTED = ("MMSE alone", "Age alone")  # zero-parameter rankings, not probabilities
+SEEDS_FILE = "oof_predictions_seeds.csv"  # seeded re-runs of the five networks: three seeds and their mean
+NETWORK_RUNS = ("prespecified", "original", "ensemble")
 PARAMS = {"LR-3": "4", "MMSE alone": "0", "LR-1": "2", "CART-3": "7", "ANFIS-on-GT": "126",
           "ANFIS-on-extracted": "126", "LR-2": "3", "DeiT-Small": "22M", "VGG-16": "138M",
           "ResNet-50": "25M", "DenseNet-121": "8M", "Swin-T": "28M", PROBE: "769", "Age alone": "0"}
@@ -97,7 +99,39 @@ def recalibrate(severity, y, folds):
     return p
 
 
-def load(cohort_csv, data_dir):
+def network_scores(scores_csv, y, data_dir, mode="ensemble"):
+    """Out-of-fold scores of the five networks, with the provenance of each.
+
+    'original': the single run of the primary analyses (columns of oof_predictions.csv).
+    'ensemble': the mean of the three seeded re-runs (oof_predictions_seeds.csv) for every network; the
+        reported configuration (docs/prespecification_networks_adni.md, Deviations).
+    'prespecified': the rule of docs/prespecification_networks_adni.md: the original run stays unless its AUC
+    lies outside the range of the three seed AUCs, in which case the seed ensemble replaces it.
+    """
+    if mode not in NETWORK_RUNS:
+        raise ValueError(f"network_runs must be one of {NETWORK_RUNS}, got {mode!r}")
+    seeds = None
+    if mode != "original":
+        if not (data_dir / SEEDS_FILE).exists():
+            raise SystemExit(f"{data_dir / SEEDS_FILE} is required for network_runs={mode!r}")
+        seeds = pd.read_csv(data_dir / SEEDS_FILE)
+        if not (seeds["subject_id"].astype(str) == scores_csv["subject_id"].astype(str)).all():
+            raise SystemExit(f"{SEEDS_FILE} is not in the row order of oof_predictions.csv")
+    scores, provenance = {}, {}
+    for name, col in DEEP_COLUMNS.items():
+        original = scores_csv[col].to_numpy()
+        if seeds is None:
+            scores[name], provenance[name] = original, "original run"
+            continue
+        seed_aucs = [roc_auc_score(y, seeds[c]) for c in seeds.columns if c.startswith(f"{col}_seed")]
+        inside = min(seed_aucs) <= roc_auc_score(y, original) <= max(seed_aucs)
+        use_ensemble = mode == "ensemble" or not inside
+        scores[name] = seeds[f"{col}_ensemble"].to_numpy() if use_ensemble else original
+        provenance[name] = "seed ensemble" if use_ensemble else "original run"
+    return scores, provenance
+
+
+def load(cohort_csv, data_dir, network_runs="ensemble"):
     scores_csv = pd.read_csv(data_dir / "oof_predictions.csv")
     cohort = scores_csv[["subject_id", "fold"]].merge(pd.read_csv(cohort_csv), on="subject_id",
                                                      how="left", validate="1:1")
@@ -120,8 +154,8 @@ def load(cohort_csv, data_dir):
         "ANFIS-on-extracted": scores_csv["anfis_extracted_severity"].to_numpy(),
         "LR-2": out_of_fold(cohort, {"hippo": "aseg_hippo_total", "wbv": "wbv_final"}, logistic),
     }
-    for name, col in DEEP_COLUMNS.items():
-        scores[name] = scores_csv[col].to_numpy()
+    deep, provenance = network_scores(scores_csv, y, data_dir, network_runs)
+    scores.update(deep)
     probe = scores_csv[["subject_id"]].merge(pd.read_csv(data_dir / "oof_probe_brainiac_probe.csv"),
                                              on="subject_id", how="left", validate="1:1")
     scores[PROBE] = probe["brainiac_probe"].to_numpy()  # out-of-fold probabilities of the probe
@@ -129,7 +163,7 @@ def load(cohort_csv, data_dir):
     probs = {k: v for k, v in scores.items() if k not in UNFITTED}  # probabilities for operating point, Brier
     for name in ("ANFIS-on-GT", "ANFIS-on-extracted"):
         probs[name] = recalibrate(scores[name], y, folds)
-    return cohort, y, folds, scores, probs
+    return cohort, y, folds, scores, probs, provenance
 
 
 # ---------------------------------------------------------------- statistics
@@ -475,12 +509,16 @@ def main():
     parser.add_argument("--out", type=Path, default=REPO / "results")
     parser.add_argument("--n-boot", type=int, default=5000)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--network-runs", choices=NETWORK_RUNS, default="ensemble",
+                        help="which run of each deep network enters the tables: the seed ensemble (default, as reported), "
+                             "the original single run, or the pre-specified per-network rule")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
-    cohort, y, folds, scores, probs = load(args.cohort, args.data)
+    cohort, y, folds, scores, probs, network_runs = load(args.cohort, args.data, args.network_runs)
+    print("Deep-network runs:", json.dumps(network_runs))
     assert y.sum() == EVENTS and len(y) == 226 and len(scores) == len(MODELS) == 14, "unexpected cohort"
-    results = {}
+    results = {"network_runs": network_runs}
     with pd.option_context("display.width", 220, "display.max_columns", 30):
         if args.demographics:
             t = cohort_table(cohort, args.demographics)

@@ -107,7 +107,7 @@ differences from 5000 paired bootstrap replicates (seed 0), as in the manuscript
 
 ## Deviations
 
-Recorded before any network output existed.
+The first two were recorded before any network output existed; the third after the results.
 
 - 2026-11-02, scanner metadata. The first cohort file took manufacturer and model from the ADNIMERGE2 MRIQC
   table (most frequent value over a participant's screening MPRAGE series). That left 136 of the 601 participants
@@ -120,6 +120,15 @@ Recorded before any network output existed.
   the tagged code (`scripts/adni_networks_eval.py`, `MIN_SITE = 5`) has used five participants of the class
   under test since the pipeline test on synthetic runs, because no site has ten CDR 0 participants. The text
   now states what the code does; the code is unchanged.
+- 2026-11-02, reported network runs on OASIS-1 (after the results). The rule above kept a single run unless its
+  AUC lay outside the three-seed range. Three of the five single runs lay outside, by 0.004 (DeiT-Small, above),
+  0.007 (VGG-16, below) and 0.001 (ResNet-50, above); a literal application would mix single runs and ensembles
+  in Table II. We replaced all five single runs by the seed ensembles (`evaluate.py --network-runs ensemble`, now
+  the default). For DenseNet-121 and Swin-T, whose single runs lay inside their ranges, this raised the AUC by
+  0.015 and 0.014. Consequences: no F1 conclusion changed; in F4, VGG-16 became significant on all subjects (the
+  single run had Holm p 0.078, every seed and the ensemble p ≤ 0.036), and in the subjects aged 60 or over all
+  five ensembles exceeded age alone (ResNet-50, DenseNet-121 and Swin-T did so in 0, 2 and 1 of 3 seeds). The
+  manuscript therefore reports the ensemble results and states which conclusions hold in every seed (Table S8).
 
 ## Checkpoints
 
@@ -129,3 +138,18 @@ Recorded before any network output existed.
   25–55 % of each brain's anterior–posterior extent, against 23–53 % in 40 local OASIS-1 volumes. All 601 source
   images are float32 with continuous values (no integer quantisation), so the white-matter normalisation is safe
   for the low-intensity-scale scanners (raw white-matter peak 33–2952).
+- 2026-11-02, Q3 (OASIS-1 seeds, A100, 3.1 GPU hours). Seed means lay within 0.016 of the single runs; seed SD
+  0.001 (ResNet-50) to 0.047 (Swin-T); the architecture ranking changed with the seed. F1 stable for every
+  network and seed. F4: DeiT-Small and VGG-16 above age alone in every seed in both cohorts; ResNet-50,
+  DenseNet-121 and Swin-T crossed the Holm threshold between seeds. Swin-T seeds 1 and 2 stopped at epochs 1–3 in
+  several folds (balanced-accuracy early stopping on 24 validation subjects), so their pooled AUC lay 0.05–0.10
+  below the mean fold AUC.
+- 2026-11-02, Q1 and Q2 (ADNI1, A100, 10.3 GPU hours, 150 fold runs). Seed ensembles: DeiT-Small 0.681, VGG-16
+  0.674, Swin-T 0.666, DenseNet-121 0.653, ResNet-50 0.633. A5: all five below LR-2 (0.779) by 0.098–0.146, Holm
+  p ≤ 0.0001. A6: below the MMSE score by 0.200–0.248. A7: above age alone by 0.163–0.211; none above
+  |age − median| (−0.004 to +0.044, Holm p ≥ 0.90). Learning curve: full pool minus 181 participants +0.007 to
+  +0.022, mean +0.016, none significant. Increment over the MMSE: +0.007 to +0.015 (volumes: +0.031). ρ with age
+  within CDR 0: 0.27–0.44 (raw-volume benchmark 0.38); ρ with |age − median| ≤ 0.05. Kruskal–Wallis within CDR 0:
+  no manufacturer effect (p ≥ 0.15); one site effect of five (ResNet-50, p = 0.028). Seed SD 0.001–0.020. The
+  first pre-specified reading applies: the two-volume logistic regression is not exceeded by this family of
+  networks at either sample size, and the OASIS-1 result is not a sample-size artefact.

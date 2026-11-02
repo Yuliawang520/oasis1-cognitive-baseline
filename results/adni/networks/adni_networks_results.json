@@ -1,0 +1,486 @@
+{
+ "n": 601,
+ "events": 410,
+ "seeds": [
+  "seed0",
+  "seed1",
+  "seed2"
+ ],
+ "models": {
+  "DenseNet-121 (pool full)": {
+   "AUC": "0.653",
+   "95% CI": "[0.606, 0.698]",
+   "Fold AUC": "0.652 \u00b1 0.055",
+   "Seed AUC": "0.648 \u00b1 0.001",
+   "Seed range": "0.648-0.649",
+   "rho with age, CDR 0": "+0.44",
+   "rho with |age-median|, CDR 0": "+0.03"
+  },
+  "DenseNet-121 (pool 181)": {
+   "AUC": "0.637",
+   "95% CI": "[0.588, 0.685]",
+   "Fold AUC": "0.650 \u00b1 0.065",
+   "Seed AUC": "0.618 \u00b1 0.005",
+   "Seed range": "0.612-0.622",
+   "rho with age, CDR 0": "+0.40",
+   "rho with |age-median|, CDR 0": "+0.08"
+  },
+  "VGG-16 (pool full)": {
+   "AUC": "0.674",
+   "95% CI": "[0.629, 0.720]",
+   "Fold AUC": "0.673 \u00b1 0.034",
+   "Seed AUC": "0.665 \u00b1 0.007",
+   "Seed range": "0.657-0.671",
+   "rho with age, CDR 0": "+0.41",
+   "rho with |age-median|, CDR 0": "+0.05"
+  },
+  "VGG-16 (pool 181)": {
+   "AUC": "0.654",
+   "95% CI": "[0.606, 0.700]",
+   "Fold AUC": "0.659 \u00b1 0.031",
+   "Seed AUC": "0.639 \u00b1 0.007",
+   "Seed range": "0.632-0.646",
+   "rho with age, CDR 0": "+0.40",
+   "rho with |age-median|, CDR 0": "+0.10"
+  },
+  "ResNet-50 (pool full)": {
+   "AUC": "0.633",
+   "95% CI": "[0.583, 0.680]",
+   "Fold AUC": "0.649 \u00b1 0.056",
+   "Seed AUC": "0.621 \u00b1 0.013",
+   "Seed range": "0.614-0.636",
+   "rho with age, CDR 0": "+0.27",
+   "rho with |age-median|, CDR 0": "+0.03"
+  },
+  "ResNet-50 (pool 181)": {
+   "AUC": "0.610",
+   "95% CI": "[0.561, 0.659]",
+   "Fold AUC": "0.623 \u00b1 0.050",
+   "Seed AUC": "0.582 \u00b1 0.014",
+   "Seed range": "0.566-0.594",
+   "rho with age, CDR 0": "+0.29",
+   "rho with |age-median|, CDR 0": "+0.13"
+  },
+  "DeiT-Small (pool full)": {
+   "AUC": "0.681",
+   "95% CI": "[0.635, 0.725]",
+   "Fold AUC": "0.686 \u00b1 0.040",
+   "Seed AUC": "0.673 \u00b1 0.020",
+   "Seed range": "0.652-0.691",
+   "rho with age, CDR 0": "+0.40",
+   "rho with |age-median|, CDR 0": "+0.01"
+  },
+  "DeiT-Small (pool 181)": {
+   "AUC": "0.665",
+   "95% CI": "[0.615, 0.712]",
+   "Fold AUC": "0.673 \u00b1 0.056",
+   "Seed AUC": "0.638 \u00b1 0.021",
+   "Seed range": "0.619-0.661",
+   "rho with age, CDR 0": "+0.42",
+   "rho with |age-median|, CDR 0": "+0.05"
+  },
+  "Swin-T (pool full)": {
+   "AUC": "0.666",
+   "95% CI": "[0.620, 0.712]",
+   "Fold AUC": "0.666 \u00b1 0.043",
+   "Seed AUC": "0.654 \u00b1 0.009",
+   "Seed range": "0.645-0.663",
+   "rho with age, CDR 0": "+0.37",
+   "rho with |age-median|, CDR 0": "+0.02"
+  },
+  "Swin-T (pool 181)": {
+   "AUC": "0.659",
+   "95% CI": "[0.612, 0.705]",
+   "Fold AUC": "0.662 \u00b1 0.052",
+   "Seed AUC": "0.627 \u00b1 0.025",
+   "Seed range": "0.599-0.647",
+   "rho with age, CDR 0": "+0.38",
+   "rho with |age-median|, CDR 0": "+0.09"
+  },
+  "MMSE alone": {
+   "AUC": "0.880",
+   "95% CI": "[0.854, 0.905]",
+   "rho with age, CDR 0": "-0.04",
+   "rho with |age-median|, CDR 0": "+0.08"
+  },
+  "LR-1": {
+   "AUC": "0.877",
+   "95% CI": "[0.849, 0.903]",
+   "rho with age, CDR 0": "-0.09",
+   "rho with |age-median|, CDR 0": "+0.10"
+  },
+  "LR-2": {
+   "AUC": "0.779",
+   "95% CI": "[0.741, 0.815]",
+   "rho with age, CDR 0": "+0.14",
+   "rho with |age-median|, CDR 0": "-0.02"
+  },
+  "LR-2 raw": {
+   "AUC": "0.756",
+   "95% CI": "[0.716, 0.794]",
+   "rho with age, CDR 0": "+0.38",
+   "rho with |age-median|, CDR 0": "+0.08"
+  },
+  "LR-3": {
+   "AUC": "0.908",
+   "95% CI": "[0.885, 0.929]",
+   "rho with age, CDR 0": "+0.06",
+   "rho with |age-median|, CDR 0": "+0.07"
+  },
+  "Age alone": {
+   "AUC": "0.470",
+   "95% CI": "[0.424, 0.516]",
+   "rho with age, CDR 0": "+1.00",
+   "rho with |age-median|, CDR 0": "+0.14"
+  },
+  "Age U-score": {
+   "AUC": "0.637",
+   "95% CI": "[0.590, 0.684]",
+   "rho with age, CDR 0": "+0.14",
+   "rho with |age-median|, CDR 0": "+1.00"
+  }
+ },
+ "A5: networks vs LR-2": {
+  "DenseNet-121": {
+   "dAUC": "-0.126",
+   "95% CI": "[-0.175, -0.078]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "VGG-16": {
+   "dAUC": "-0.104",
+   "95% CI": "[-0.155, -0.054]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "ResNet-50": {
+   "dAUC": "-0.146",
+   "95% CI": "[-0.201, -0.092]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "DeiT-Small": {
+   "dAUC": "-0.098",
+   "95% CI": "[-0.148, -0.048]",
+   "p": "0.0001",
+   "Holm p": "0.0001"
+  },
+  "Swin-T": {
+   "dAUC": "-0.113",
+   "95% CI": "[-0.164, -0.062]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  }
+ },
+ "A6: networks vs MMSE alone": {
+  "DenseNet-121": {
+   "dAUC": "-0.228",
+   "95% CI": "[-0.280, -0.177]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "VGG-16": {
+   "dAUC": "-0.206",
+   "95% CI": "[-0.258, -0.156]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "ResNet-50": {
+   "dAUC": "-0.248",
+   "95% CI": "[-0.300, -0.196]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "DeiT-Small": {
+   "dAUC": "-0.200",
+   "95% CI": "[-0.251, -0.149]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "Swin-T": {
+   "dAUC": "-0.215",
+   "95% CI": "[-0.266, -0.163]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  }
+ },
+ "A7: networks vs age references": {
+  "DenseNet-121 vs age alone": {
+   "dAUC": "+0.183",
+   "95% CI": "[+0.131, +0.234]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "VGG-16 vs age alone": {
+   "dAUC": "+0.204",
+   "95% CI": "[+0.153, +0.257]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "ResNet-50 vs age alone": {
+   "dAUC": "+0.163",
+   "95% CI": "[+0.107, +0.218]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "DeiT-Small vs age alone": {
+   "dAUC": "+0.211",
+   "95% CI": "[+0.159, +0.261]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "Swin-T vs age alone": {
+   "dAUC": "+0.196",
+   "95% CI": "[+0.142, +0.249]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "DenseNet-121 vs |age-median|": {
+   "dAUC": "+0.016",
+   "95% CI": "[-0.048, +0.082]",
+   "p": "0.637",
+   "Holm p": "1.000"
+  },
+  "VGG-16 vs |age-median|": {
+   "dAUC": "+0.037",
+   "95% CI": "[-0.026, +0.100]",
+   "p": "0.252",
+   "Holm p": "1.000"
+  },
+  "ResNet-50 vs |age-median|": {
+   "dAUC": "-0.004",
+   "95% CI": "[-0.070, +0.061]",
+   "p": "0.904",
+   "Holm p": "1.000"
+  },
+  "DeiT-Small vs |age-median|": {
+   "dAUC": "+0.044",
+   "95% CI": "[-0.020, +0.107]",
+   "p": "0.179",
+   "Holm p": "0.897"
+  },
+  "Swin-T vs |age-median|": {
+   "dAUC": "+0.029",
+   "95% CI": "[-0.035, +0.095]",
+   "p": "0.385",
+   "Holm p": "1.000"
+  }
+ },
+ "exploratory: networks vs LR-2 raw": {
+  "DenseNet-121": {
+   "dAUC": "-0.104",
+   "95% CI": "[-0.152, -0.058]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "VGG-16": {
+   "dAUC": "-0.082",
+   "95% CI": "[-0.132, -0.034]",
+   "p": "0.0009",
+   "Holm p": "0.0018"
+  },
+  "ResNet-50": {
+   "dAUC": "-0.123",
+   "95% CI": "[-0.177, -0.071]",
+   "p": "<0.0001",
+   "Holm p": "<0.0001"
+  },
+  "DeiT-Small": {
+   "dAUC": "-0.075",
+   "95% CI": "[-0.125, -0.027]",
+   "p": "0.0026",
+   "Holm p": "0.0026"
+  },
+  "Swin-T": {
+   "dAUC": "-0.091",
+   "95% CI": "[-0.140, -0.040]",
+   "p": "0.0004",
+   "Holm p": "0.0012"
+  }
+ },
+ "increment over the MMSE": {
+  "MMSE + DenseNet-121 vs LR-1": {
+   "dAUC": "+0.010",
+   "95% CI": "[+0.000, +0.020]",
+   "p": "0.037",
+   "AUC fused": "0.887",
+   "likelihood ratio": {
+    "chi2": "7.7",
+    "p": "0.0054"
+   }
+  },
+  "MMSE + VGG-16 vs LR-1": {
+   "dAUC": "+0.015",
+   "95% CI": "[+0.005, +0.025]",
+   "p": "0.0032",
+   "AUC fused": "0.892",
+   "likelihood ratio": {
+    "chi2": "15.8",
+    "p": "<0.0001"
+   }
+  },
+  "MMSE + ResNet-50 vs LR-1": {
+   "dAUC": "+0.007",
+   "95% CI": "[-0.002, +0.015]",
+   "p": "0.110",
+   "AUC fused": "0.884",
+   "likelihood ratio": {
+    "chi2": "6.2",
+    "p": "0.013"
+   }
+  },
+  "MMSE + DeiT-Small vs LR-1": {
+   "dAUC": "+0.015",
+   "95% CI": "[+0.004, +0.026]",
+   "p": "0.0071",
+   "AUC fused": "0.892",
+   "likelihood ratio": {
+    "chi2": "16.6",
+    "p": "<0.0001"
+   }
+  },
+  "MMSE + Swin-T vs LR-1": {
+   "dAUC": "+0.014",
+   "95% CI": "[+0.004, +0.024]",
+   "p": "0.0086",
+   "AUC fused": "0.891",
+   "likelihood ratio": {
+    "chi2": "14.0",
+    "p": "0.0002"
+   }
+  }
+ },
+ "learning curve: full pool minus 181": {
+  "DenseNet-121": {
+   "dAUC": "+0.015",
+   "95% CI": "[-0.013, +0.043]",
+   "p": "0.274",
+   "AUC 181": "0.637"
+  },
+  "VGG-16": {
+   "dAUC": "+0.020",
+   "95% CI": "[-0.002, +0.043]",
+   "p": "0.077",
+   "AUC 181": "0.654"
+  },
+  "ResNet-50": {
+   "dAUC": "+0.022",
+   "95% CI": "[-0.014, +0.060]",
+   "p": "0.224",
+   "AUC 181": "0.610"
+  },
+  "DeiT-Small": {
+   "dAUC": "+0.016",
+   "95% CI": "[-0.012, +0.045]",
+   "p": "0.265",
+   "AUC 181": "0.665"
+  },
+  "Swin-T": {
+   "dAUC": "+0.007",
+   "95% CI": "[-0.015, +0.029]",
+   "p": "0.516",
+   "AUC 181": "0.659"
+  },
+  "mean dAUC over networks": "+0.016"
+ },
+ "shortcut diagnostics within CDR 0": {
+  "DenseNet-121": {
+   "Kruskal-Wallis manufacturer, p": "0.165",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.125",
+   "sites": 10
+  },
+  "VGG-16": {
+   "Kruskal-Wallis manufacturer, p": "0.150",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.156",
+   "sites": 10
+  },
+  "ResNet-50": {
+   "Kruskal-Wallis manufacturer, p": "0.768",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.028",
+   "sites": 10
+  },
+  "DeiT-Small": {
+   "Kruskal-Wallis manufacturer, p": "0.601",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.173",
+   "sites": 10
+  },
+  "Swin-T": {
+   "Kruskal-Wallis manufacturer, p": "0.238",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.078",
+   "sites": 10
+  },
+  "LR-2": {
+   "Kruskal-Wallis manufacturer, p": "0.370",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.513",
+   "sites": 10
+  },
+  "LR-2 raw": {
+   "Kruskal-Wallis manufacturer, p": "0.528",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.620",
+   "sites": 10
+  },
+  "MMSE alone": {
+   "Kruskal-Wallis manufacturer, p": "0.513",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.604",
+   "sites": 10
+  }
+ },
+ "shortcut diagnostics within CDR > 0": {
+  "DenseNet-121": {
+   "Kruskal-Wallis manufacturer, p": "0.182",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.175",
+   "sites": 40
+  },
+  "VGG-16": {
+   "Kruskal-Wallis manufacturer, p": "0.034",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.070",
+   "sites": 40
+  },
+  "ResNet-50": {
+   "Kruskal-Wallis manufacturer, p": "0.839",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.0025",
+   "sites": 40
+  },
+  "DeiT-Small": {
+   "Kruskal-Wallis manufacturer, p": "0.028",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.340",
+   "sites": 40
+  },
+  "Swin-T": {
+   "Kruskal-Wallis manufacturer, p": "0.309",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.218",
+   "sites": 40
+  },
+  "LR-2": {
+   "Kruskal-Wallis manufacturer, p": "0.709",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.145",
+   "sites": 40
+  },
+  "LR-2 raw": {
+   "Kruskal-Wallis manufacturer, p": "0.645",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.103",
+   "sites": 40
+  },
+  "MMSE alone": {
+   "Kruskal-Wallis manufacturer, p": "0.843",
+   "manufacturers": 3,
+   "Kruskal-Wallis site (>= 5 participants), p": "0.019",
+   "sites": 40
+  }
+ }
+}

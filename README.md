@@ -63,7 +63,7 @@ Trained model weights are not included.
        --demographics path/to/oasis_cross-sectional.xlsx
    ```
 
-   The script prints every table and reports how many values match the paper: all 367 should match, or 353 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
+   The script prints every table and reports how many values match the paper: all 372 should match, or 358 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
 4. Reproduce the robustness analyses (needs torch and imbalanced-learn; about 25 minutes on a laptop CPU, because the repeated splits retrain the ANFIS 1000 times):
 
    ```bash
@@ -90,7 +90,12 @@ Trained model weights are not included.
 
 ## Slice networks on ADNI1 and seed sensitivity (pre-registered)
 
-`docs/prespecification_networks_adni.md` fixes, before any training, how the five slice-based networks are re-run with seeds on OASIS-1 and trained on the 601 ADNI1 participants of the tabular replication (families A5 to A7, learning curve, shortcut diagnostics). Files:
+`docs/prespecification_networks_adni.md` fixes, before any training, how the five slice-based networks are re-run with seeds on OASIS-1 and trained on the 601 ADNI1 participants of the tabular replication (families A5 to A7, learning curve, shortcut diagnostics). Both runs are complete (A100, 3.1 and 10.3 GPU hours).
+
+- **OASIS-1 seeds.** `data/oof_predictions_seeds.csv` holds the out-of-fold probabilities of seeds 0, 1 and 2 and their mean for each network; `results/deep_baselines/seed_runs/` holds the 75 fold logs. The paper reports the seed ensemble for all five networks (Table II; `evaluate.py --network-runs ensemble`, the default; `original` reproduces the single runs of the first version, `prespecified` applies the per-network rule of the plan). `results/table_s8_seed_sensitivity.csv` and `results/seed_sensitivity.json` give Table S8: seed SD 0.001 to 0.047 in AUC, every network below the MMSE in every seed, only DeiT-Small and VGG-16 above age alone in every seed.
+- **ADNI1 networks.** `results/adni/networks/` holds the aggregate tables (Table S9): the five seed ensembles reached AUCs of 0.633 to 0.681, below LR-2 (0.779) by 0.098 to 0.146 at both training-pool sizes (full and 181 participants per fold; learning-curve gain 0.007 to 0.022), not above the distance-from-median-age score (0.637), and 0.007 to 0.015 above LR-1 when stacked with the MMSE. Per-participant ADNI predictions are not released.
+
+Files:
 
 | File | Purpose |
 |---|---|
@@ -101,7 +106,8 @@ Trained model weights are not included.
 | `scripts/slice_networks.py` | Seeded re-implementation of the five baseline notebooks (seeds, ADNI cohort, training-pool subsampling, resumable runs) |
 | `notebooks/slice_networks_multiseed_colab.ipynb` | Colab driver for the run matrix on either cohort (A100) |
 | `scripts/adni_networks_eval.py` | ADNI1 evaluation: A5 to A7, increment over the MMSE, learning curve, scanner and site diagnostics |
-| `scripts/network_seeds_eval.py` | OASIS-1 seed sensitivity (Table S8) and stability of families F1 and F4 |
+| `scripts/network_seeds_eval.py` | OASIS-1 seed sensitivity (Table S8) and stability of families F1 and F4; reads `data/oof_predictions_seeds.csv` |
+| `data/oof_predictions_seeds.csv` | Out-of-fold probabilities of the three seeded runs and their mean, per network, on the shared split |
 
 Terminology: the original notebooks call the 24 slices "axial". A FreeSurfer-conformed volume is LIA-oriented, so `vol[:, :, k]` is a coronal slice (posterior to anterior). The code, not the label, defined the pipeline; `scripts/adni_slices.py` reproduces the original PNGs to within one grey level, and the paper now says "coronal".
 
@@ -113,7 +119,7 @@ Terminology: the original notebooks call the 24 slices "axial". A FreeSurfer-con
 - **Pooling.** AUC is computed on the pooled out-of-fold predictions; per-fold mean ± SD is reported alongside, because pooling penalises fitted models relative to the unfitted MMSE ranking.
 - **Age sensitivity.** All comparisons are repeated on the 189 subjects aged 60 or over, using the same out-of-fold predictions.
 - **Baselines.** All baselines use train-fold-only age residualisation of the volumes and train-fold-only standardisation, as the ANFIS does. CART-3 uses `random_state=0`.
-- **Swin-T.** The Swin-T notebook up-weights the minority class by a further factor of 1.5 and early-stops on balanced accuracy, because with plain inverse-frequency weighting it collapsed to predicting the majority class.
+- **Swin-T.** The Swin-T notebook up-weights the minority class by a further factor of 1.5 and early-stops on balanced accuracy, because with plain inverse-frequency weighting it collapsed to predicting the majority class. On the 24-subject validation split of OASIS-1 this rule kept a checkpoint from the first three epochs in several folds of seeds 1 and 2, which mixes probability scales across folds and lowers the pooled AUC below the mean fold AUC (Table S8); on ADNI1, with about 80 validation subjects, the seeds agreed within 0.01.
 - **Ablations.** `scripts/anfis.py` reproduces the released ANFIS-on-GT outputs (AUC 0.8232; largest per-subject difference 9.6e-4, from GPU versus CPU arithmetic). Each variant changes the stated settings only and keeps the original optimiser settings. Variants with SMOTE are repeated with ten SMOTE random states. Statistics use the row order of `evaluate.py`, so the original configuration reproduces comparison F3 exactly.
 - **Repeated splits.** 100 stratified five-fold splits (`random_state` 0–99) for the five interpretable baselines, ANFIS-on-GT and the minimal ANFIS variant. The deep networks are not retrained.
 - **BrainIAC probe.** Preprocessing follows BrainIAC's released pipeline (N4, rigid registration to its `temp_head.nii.gz` template with Mattes mutual information, whole volume resized to 96³, z-scored over non-zero voxels); HD-BET is skipped because `brainmask.mgz` is already skull-stripped. The probe is an L2 logistic regression on the standardised 768-dimensional features, fitted on the four training folds of the shared split with the penalty chosen by an inner five-fold cross-validation. Pre-specified comparisons (family F5, Holm within three per cohort): probe vs MMSE alone, vs age alone and vs LR-2, on all subjects and on those aged 60 or over. The MMSE + probe fusion uses nested stacking, so no training subject receives a probe score from a model that saw it. BrainIAC's pretraining pool includes ADNI, OASIS-2, OASIS-3 and MIRIAD, but not OASIS-1; the pretraining used no labels. The penalty grid specified before the features existed (1e-4 to 10) was chosen at its lower boundary in every fold, so the primary analysis uses the grid 1e-6 to 10 and the original grid is kept as a sensitivity analysis (`--c-grid 1e-4,1e-3,1e-2,1e-1,1,10`); the released checkpoint is a MONAI ViT-B without a class token, so BrainIAC's representation is the first token of the final layer, and the mean of the 216 patch tokens is a second sensitivity variant.

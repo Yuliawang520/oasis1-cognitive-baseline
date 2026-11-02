@@ -1,8 +1,9 @@
 """Seed sensitivity of the five slice networks on OASIS-1 (Q3 of docs/prespecification_networks_adni.md).
 
-Reads the seeded re-runs written by notebooks/slice_networks_multiseed_colab.ipynb (COHORT = 'oasis'):
-  runs_oasis/ensemble_oasis_<model>_poolfull.csv   columns subject_id, label, fold, seed0.., prob_demented
-and the original benchmark (data/oof_predictions.csv, the cohort file) through evaluate.load, then reports
+Reads the seeded re-runs of the five networks, either from data/oof_predictions_seeds.csv (released with the
+repository; columns <model>_seed0.., <model>_ensemble) or, with --runs-dir, from the folder written by
+notebooks/slice_networks_multiseed_colab.ipynb (COHORT = 'oasis'; ensemble_oasis_<model>_poolfull.csv), and the
+original benchmark (data/oof_predictions.csv, the cohort file) through evaluate.load, then reports
 
   * per network: original AUC, per-seed AUCs (mean ± SD, range), whether the original run lies inside the seed
     range, and the seed-ensemble AUC with its CI;
@@ -12,9 +13,10 @@ and the original benchmark (data/oof_predictions.csv, the cohort file) through e
   * a stability flag per network and family: "stable" when direction and Holm significance (0.05) agree between the
     original run, the ensemble and every seed.
 
-Decision rule of the plan: an original run stays the primary result if it lies within the seed range.
+Decision rule of the plan: an original run stays the primary result if it lies within the seed range;
+otherwise the seed ensemble replaces it (evaluate.network_scores applies the same rule to every table of the paper).
 
-Usage: python scripts/network_seeds_eval.py --cohort path/to/oasis_master_features_labels.csv --runs-dir path/to/runs_oasis
+Usage: python scripts/network_seeds_eval.py --cohort path/to/oasis_master_features_labels.csv [--runs-dir path/to/runs_oasis]
 """
 from __future__ import annotations
 
@@ -34,8 +36,22 @@ RUN_NAMES = {"DeiT-Small": "deit_small", "VGG-16": "vgg16", "ResNet-50": "resnet
              "DenseNet-121": "densenet121", "Swin-T": "swin_t"}
 
 
-def load_runs(runs_dir: Path, cohort: pd.DataFrame) -> tuple[dict, dict, list[str]]:
+def load_runs(runs_dir: Path | None, data_dir: Path, cohort: pd.DataFrame) -> tuple[dict, dict, list[str]]:
+    """Per-seed and ensemble scores of each network, from the Colab run folder or (default) from the released
+    data/oof_predictions_seeds.csv, which holds the same numbers."""
     ensembles, per_seed, seeds = {}, {}, []
+    if runs_dir is None:
+        df = pd.read_csv(data_dir / ev.SEEDS_FILE)
+        df["subject_id"] = df["subject_id"].astype(str)
+        merged = cohort[["subject_id"]].merge(df, on="subject_id", how="left", validate="1:1")
+        for title, name in RUN_NAMES.items():
+            seed_cols = sorted(c for c in df.columns if c.startswith(f"{name}_seed"))
+            if not seed_cols:
+                continue
+            seeds = seeds or [c.split("_")[-1] for c in seed_cols]
+            ensembles[title] = merged[f"{name}_ensemble"].to_numpy()
+            per_seed[title] = {c.split("_")[-1]: merged[c].to_numpy() for c in seed_cols}
+        return ensembles, per_seed, seeds
     for title, name in RUN_NAMES.items():
         f = runs_dir / f"ensemble_oasis_{name}_poolfull.csv"
         if not f.exists():
@@ -82,15 +98,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--cohort", type=Path, required=True)
     ap.add_argument("--data", type=Path, default=ev.REPO / "data")
-    ap.add_argument("--runs-dir", type=Path, required=True)
+    ap.add_argument("--runs-dir", type=Path, default=None,
+                    help="Colab run folder; default: the released data/oof_predictions_seeds.csv")
     ap.add_argument("--out", type=Path, default=ev.REPO / "results")
     ap.add_argument("--n-boot", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
-    cohort, y, folds, scores, _ = ev.load(args.cohort, args.data)
+    cohort, y, folds, scores, _, _ = ev.load(args.cohort, args.data, network_runs="original")
     age = cohort["age"].to_numpy(dtype=float)
-    ensembles, per_seed, seeds = load_runs(args.runs_dir, cohort)
+    ensembles, per_seed, seeds = load_runs(args.runs_dir, args.data, cohort)
     if not ensembles:
         raise SystemExit("no seeded runs found")
 

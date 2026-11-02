@@ -1,0 +1,547 @@
+{
+ "seeds": [
+  "seed0",
+  "seed1",
+  "seed2"
+ ],
+ "networks": {
+  "DeiT-Small": {
+   "Original AUC": "0.765",
+   "seed0": "0.755",
+   "seed1": "0.751",
+   "seed2": "0.761",
+   "Seed mean \u00b1 SD": "0.755 \u00b1 0.005",
+   "Seed range": "0.751-0.761",
+   "Original inside range": false,
+   "Ensemble AUC": "0.759",
+   "Ensemble 95% CI": "[0.693, 0.818]",
+   "Ensemble 60+ AUC": "0.676"
+  },
+  "VGG-16": {
+   "Original AUC": "0.737",
+   "seed0": "0.764",
+   "seed1": "0.752",
+   "seed2": "0.744",
+   "Seed mean \u00b1 SD": "0.753 \u00b1 0.010",
+   "Seed range": "0.744-0.764",
+   "Original inside range": false,
+   "Ensemble AUC": "0.756",
+   "Ensemble 95% CI": "[0.691, 0.817]",
+   "Ensemble 60+ AUC": "0.670"
+  },
+  "ResNet-50": {
+   "Original AUC": "0.726",
+   "seed0": "0.723",
+   "seed1": "0.725",
+   "seed2": "0.722",
+   "Seed mean \u00b1 SD": "0.723 \u00b1 0.001",
+   "Seed range": "0.722-0.725",
+   "Original inside range": false,
+   "Ensemble AUC": "0.730",
+   "Ensemble 95% CI": "[0.665, 0.793]",
+   "Ensemble 60+ AUC": "0.632"
+  },
+  "DenseNet-121": {
+   "Original AUC": "0.717",
+   "seed0": "0.710",
+   "seed1": "0.740",
+   "seed2": "0.732",
+   "Seed mean \u00b1 SD": "0.727 \u00b1 0.015",
+   "Seed range": "0.710-0.740",
+   "Original inside range": true,
+   "Ensemble AUC": "0.732",
+   "Ensemble 95% CI": "[0.666, 0.793]",
+   "Ensemble 60+ AUC": "0.638"
+  },
+  "Swin-T": {
+   "Original AUC": "0.677",
+   "seed0": "0.731",
+   "seed1": "0.669",
+   "seed2": "0.640",
+   "Seed mean \u00b1 SD": "0.680 \u00b1 0.047",
+   "Seed range": "0.640-0.731",
+   "Original inside range": true,
+   "Ensemble AUC": "0.691",
+   "Ensemble 95% CI": "[0.615, 0.759]",
+   "Ensemble 60+ AUC": "0.629"
+  }
+ },
+ "stability": {
+  "DeiT-Small": {
+   "F1 (vs MMSE)": "stable",
+   "F4 all (vs age)": "stable",
+   "F4 60+ (vs age)": "stable"
+  },
+  "VGG-16": {
+   "F1 (vs MMSE)": "stable",
+   "F4 all (vs age)": "unstable",
+   "F4 60+ (vs age)": "stable"
+  },
+  "ResNet-50": {
+   "F1 (vs MMSE)": "stable",
+   "F4 all (vs age)": "stable",
+   "F4 60+ (vs age)": "unstable"
+  },
+  "DenseNet-121": {
+   "F1 (vs MMSE)": "stable",
+   "F4 all (vs age)": "unstable",
+   "F4 60+ (vs age)": "unstable"
+  },
+  "Swin-T": {
+   "F1 (vs MMSE)": "stable",
+   "F4 all (vs age)": "unstable",
+   "F4 60+ (vs age)": "unstable"
+  }
+ },
+ "no model significantly exceeds the MMSE": {
+  "original": true,
+  "ensemble": true,
+  "seed0": true,
+  "seed1": true,
+  "seed2": true
+ },
+ "F1 by variant": {
+  "original": {
+   "LR-3": {
+    "dAUC": "+0.017",
+    "Holm p": "0.349"
+   },
+   "CART-3": {
+    "dAUC": "-0.021",
+    "Holm p": "0.384"
+   },
+   "ANFIS-on-GT": {
+    "dAUC": "-0.067",
+    "Holm p": "0.033"
+   },
+   "ANFIS-on-extracted": {
+    "dAUC": "-0.093",
+    "Holm p": "0.0017"
+   },
+   "LR-2": {
+    "dAUC": "-0.120",
+    "Holm p": "0.0032"
+   },
+   "DeiT-Small": {
+    "dAUC": "-0.125",
+    "Holm p": "0.0023"
+   },
+   "VGG-16": {
+    "dAUC": "-0.153",
+    "Holm p": "0.0003"
+   },
+   "ResNet-50": {
+    "dAUC": "-0.164",
+    "Holm p": "<0.0001"
+   },
+   "DenseNet-121": {
+    "dAUC": "-0.173",
+    "Holm p": "<0.0001"
+   },
+   "Swin-T": {
+    "dAUC": "-0.213",
+    "Holm p": "<0.0001"
+   }
+  },
+  "ensemble": {
+   "LR-3": {
+    "dAUC": "+0.017",
+    "Holm p": "0.349"
+   },
+   "CART-3": {
+    "dAUC": "-0.021",
+    "Holm p": "0.384"
+   },
+   "ANFIS-on-GT": {
+    "dAUC": "-0.067",
+    "Holm p": "0.033"
+   },
+   "ANFIS-on-extracted": {
+    "dAUC": "-0.093",
+    "Holm p": "0.0017"
+   },
+   "LR-2": {
+    "dAUC": "-0.120",
+    "Holm p": "0.0032"
+   },
+   "DeiT-Small": {
+    "dAUC": "-0.131",
+    "Holm p": "0.0017"
+   },
+   "VGG-16": {
+    "dAUC": "-0.134",
+    "Holm p": "0.0014"
+   },
+   "ResNet-50": {
+    "dAUC": "-0.160",
+    "Holm p": "<0.0001"
+   },
+   "DenseNet-121": {
+    "dAUC": "-0.158",
+    "Holm p": "<0.0001"
+   },
+   "Swin-T": {
+    "dAUC": "-0.200",
+    "Holm p": "<0.0001"
+   }
+  },
+  "seed0": {
+   "LR-3": {
+    "dAUC": "+0.017",
+    "Holm p": "0.349"
+   },
+   "CART-3": {
+    "dAUC": "-0.021",
+    "Holm p": "0.384"
+   },
+   "ANFIS-on-GT": {
+    "dAUC": "-0.067",
+    "Holm p": "0.033"
+   },
+   "ANFIS-on-extracted": {
+    "dAUC": "-0.093",
+    "Holm p": "0.0017"
+   },
+   "LR-2": {
+    "dAUC": "-0.120",
+    "Holm p": "0.0032"
+   },
+   "DeiT-Small": {
+    "dAUC": "-0.135",
+    "Holm p": "0.0017"
+   },
+   "VGG-16": {
+    "dAUC": "-0.126",
+    "Holm p": "0.0021"
+   },
+   "ResNet-50": {
+    "dAUC": "-0.168",
+    "Holm p": "<0.0001"
+   },
+   "DenseNet-121": {
+    "dAUC": "-0.180",
+    "Holm p": "<0.0001"
+   },
+   "Swin-T": {
+    "dAUC": "-0.159",
+    "Holm p": "0.0002"
+   }
+  },
+  "seed1": {
+   "LR-3": {
+    "dAUC": "+0.017",
+    "Holm p": "0.349"
+   },
+   "CART-3": {
+    "dAUC": "-0.021",
+    "Holm p": "0.384"
+   },
+   "ANFIS-on-GT": {
+    "dAUC": "-0.067",
+    "Holm p": "0.033"
+   },
+   "ANFIS-on-extracted": {
+    "dAUC": "-0.093",
+    "Holm p": "0.0014"
+   },
+   "LR-2": {
+    "dAUC": "-0.120",
+    "Holm p": "0.0032"
+   },
+   "DeiT-Small": {
+    "dAUC": "-0.139",
+    "Holm p": "0.0009"
+   },
+   "VGG-16": {
+    "dAUC": "-0.138",
+    "Holm p": "0.0009"
+   },
+   "ResNet-50": {
+    "dAUC": "-0.166",
+    "Holm p": "<0.0001"
+   },
+   "DenseNet-121": {
+    "dAUC": "-0.151",
+    "Holm p": "0.0001"
+   },
+   "Swin-T": {
+    "dAUC": "-0.222",
+    "Holm p": "<0.0001"
+   }
+  },
+  "seed2": {
+   "LR-3": {
+    "dAUC": "+0.017",
+    "Holm p": "0.349"
+   },
+   "CART-3": {
+    "dAUC": "-0.021",
+    "Holm p": "0.384"
+   },
+   "ANFIS-on-GT": {
+    "dAUC": "-0.067",
+    "Holm p": "0.033"
+   },
+   "ANFIS-on-extracted": {
+    "dAUC": "-0.093",
+    "Holm p": "0.0017"
+   },
+   "LR-2": {
+    "dAUC": "-0.120",
+    "Holm p": "0.0032"
+   },
+   "DeiT-Small": {
+    "dAUC": "-0.129",
+    "Holm p": "0.0021"
+   },
+   "VGG-16": {
+    "dAUC": "-0.146",
+    "Holm p": "0.0004"
+   },
+   "ResNet-50": {
+    "dAUC": "-0.168",
+    "Holm p": "<0.0001"
+   },
+   "DenseNet-121": {
+    "dAUC": "-0.159",
+    "Holm p": "0.0001"
+   },
+   "Swin-T": {
+    "dAUC": "-0.250",
+    "Holm p": "<0.0001"
+   }
+  }
+ },
+ "F4 by variant": {
+  "original": {
+   "all": {
+    "DeiT-Small": {
+     "dAUC": "+0.100",
+     "Holm p": "0.0017"
+    },
+    "VGG-16": {
+     "dAUC": "+0.072",
+     "Holm p": "0.078"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.061",
+     "Holm p": "0.129"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.052",
+     "Holm p": "0.181"
+    },
+    "Swin-T": {
+     "dAUC": "+0.012",
+     "Holm p": "0.747"
+    }
+   },
+   "60+": {
+    "DeiT-Small": {
+     "dAUC": "+0.148",
+     "Holm p": "0.0003"
+    },
+    "VGG-16": {
+     "dAUC": "+0.114",
+     "Holm p": "0.020"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.094",
+     "Holm p": "0.055"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.090",
+     "Holm p": "0.055"
+    },
+    "Swin-T": {
+     "dAUC": "+0.073",
+     "Holm p": "0.106"
+    }
+   }
+  },
+  "ensemble": {
+   "all": {
+    "DeiT-Small": {
+     "dAUC": "+0.094",
+     "Holm p": "0.0042"
+    },
+    "VGG-16": {
+     "dAUC": "+0.091",
+     "Holm p": "0.0077"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.065",
+     "Holm p": "0.062"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.067",
+     "Holm p": "0.058"
+    },
+    "Swin-T": {
+     "dAUC": "+0.026",
+     "Holm p": "0.499"
+    }
+   },
+   "60+": {
+    "DeiT-Small": {
+     "dAUC": "+0.140",
+     "Holm p": "0.0009"
+    },
+    "VGG-16": {
+     "dAUC": "+0.134",
+     "Holm p": "0.0026"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.096",
+     "Holm p": "0.039"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.102",
+     "Holm p": "0.023"
+    },
+    "Swin-T": {
+     "dAUC": "+0.093",
+     "Holm p": "0.039"
+    }
+   }
+  },
+  "seed0": {
+   "all": {
+    "DeiT-Small": {
+     "dAUC": "+0.090",
+     "Holm p": "0.0064"
+    },
+    "VGG-16": {
+     "dAUC": "+0.099",
+     "Holm p": "0.0042"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.057",
+     "Holm p": "0.146"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.045",
+     "Holm p": "0.146"
+    },
+    "Swin-T": {
+     "dAUC": "+0.066",
+     "Holm p": "0.099"
+    }
+   },
+   "60+": {
+    "DeiT-Small": {
+     "dAUC": "+0.135",
+     "Holm p": "0.0013"
+    },
+    "VGG-16": {
+     "dAUC": "+0.146",
+     "Holm p": "0.0009"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.094",
+     "Holm p": "0.056"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.080",
+     "Holm p": "0.056"
+    },
+    "Swin-T": {
+     "dAUC": "+0.119",
+     "Holm p": "0.0071"
+    }
+   }
+  },
+  "seed1": {
+   "all": {
+    "DeiT-Small": {
+     "dAUC": "+0.086",
+     "Holm p": "0.0092"
+    },
+    "VGG-16": {
+     "dAUC": "+0.087",
+     "Holm p": "0.015"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.060",
+     "Holm p": "0.134"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.074",
+     "Holm p": "0.048"
+    },
+    "Swin-T": {
+     "dAUC": "+0.004",
+     "Holm p": "0.927"
+    }
+   },
+   "60+": {
+    "DeiT-Small": {
+     "dAUC": "+0.128",
+     "Holm p": "0.0021"
+    },
+    "VGG-16": {
+     "dAUC": "+0.127",
+     "Holm p": "0.0063"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.095",
+     "Holm p": "0.057"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.111",
+     "Holm p": "0.022"
+    },
+    "Swin-T": {
+     "dAUC": "+0.066",
+     "Holm p": "0.154"
+    }
+   }
+  },
+  "seed2": {
+   "all": {
+    "DeiT-Small": {
+     "dAUC": "+0.096",
+     "Holm p": "0.0062"
+    },
+    "VGG-16": {
+     "dAUC": "+0.079",
+     "Holm p": "0.036"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.057",
+     "Holm p": "0.125"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.066",
+     "Holm p": "0.051"
+    },
+    "Swin-T": {
+     "dAUC": "-0.025",
+     "Holm p": "0.591"
+    }
+   },
+   "60+": {
+    "DeiT-Small": {
+     "dAUC": "+0.143",
+     "Holm p": "0.0012"
+    },
+    "VGG-16": {
+     "dAUC": "+0.119",
+     "Holm p": "0.013"
+    },
+    "ResNet-50": {
+     "dAUC": "+0.087",
+     "Holm p": "0.071"
+    },
+    "DenseNet-121": {
+     "dAUC": "+0.101",
+     "Holm p": "0.020"
+    },
+    "Swin-T": {
+     "dAUC": "+0.076",
+     "Holm p": "0.149"
+    }
+   }
+  }
+ }
+}
