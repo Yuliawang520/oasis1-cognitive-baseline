@@ -105,6 +105,41 @@ differences from 5000 paired bootstrap replicates (seed 0), as in the manuscript
 - Per-participant ADNI predictions are not released (ADNI Data Use Agreement); the repository receives aggregate
   tables only.
 
+## Q4 (added 2026-11-05, after the Q1 to Q3 results and before any run): age-matched training on OASIS-1
+
+Added in response to the limitation stated in the manuscript ("age-matched training sets would test it directly").
+The readings below were fixed before the run.
+
+- **Question.** Does training without the 37 volunteers under 60 change what the networks extract? The 189 subjects
+  aged 60 or over (93 demented, age 76.7 ± 7.3; 96 non-demented, 75.7 ± 9.0; Mann–Whitney p = 0.39; age alone
+  AUC 0.536) form an age-matched cohort without a monotonic age shortcut.
+- **Data and split.** The 189 subjects with the shared five folds restricted to them (training pools of 150 to
+  154 subjects, test folds of 35 to 39 with 18 or 19 demented). Slices, training recipe, seeds 0, 1 and 2 and the
+  seed ensemble as for `oasis`. Cohort file from `scripts/oasis60_cohort.py` (kept outside the repository);
+  notebook `COHORT = 'oasis60'`; run folder `runs_oasis60`.
+- **Comparisons** (`scripts/network_agematched_eval.py`; paired two-sided DeLong tests on the 189 subjects, paired
+  bootstrap 95 % CIs, Holm within each family of five):
+  - M1 (primary): the matched-trained ensemble versus the all-trained ensemble evaluated on the same 189 subjects.
+  - M2: the matched-trained ensemble versus age alone (0.536).
+  - M3: the matched-trained ensemble versus LR-2 (0.800; its out-of-fold predictions on these subjects).
+  - Diagnostics: per-seed AUCs; Spearman ρ with age within the 96 non-demented subjects and the age-adjusted AUC
+    (five-year strata) for both training variants.
+  - Exploratory: the BrainIAC linear probe refitted on the 189 subjects (same penalty grid and inner cross-validation)
+    versus the all-fitted probe on the same subjects; the matched-trained ensembles versus the MMSE score.
+- **Readings fixed in advance.**
+  - M1 differences within ±0.02 and none significant: the volunteers did not displace disease information; the AUC of
+    the all-trained networks in this subgroup (0.63 to 0.68) is what the slices give beyond age. The ρ with age of
+    the matched-trained networks is expected to fall below the 0.61 to 0.83 of the all-trained networks.
+  - Matched-trained significantly above all-trained: the age shortcut displaced disease features on the full cohort;
+    the age attribution is strengthened and the manuscript says so.
+  - Matched-trained below all-trained by more than 0.02: the smaller pool (about 151 against 181) cost more than the
+    shortcut; the ADNI1 learning curve (+0.016 for 2.7 times the pool) bounds the pool effect at about 0.01, so a
+    larger drop is reported as unexplained.
+  - Any network above LR-2 (M3) would contradict A5 on ADNI1 and is reported as such.
+- **Not planned.** No age-matched training on ADNI1 (its networks neither track age nor exceed the age score); no
+  change to hyperparameters or seeds; no 1:1 matching beyond the age-60 restriction, which already equalises the
+  group means.
+
 ## Deviations
 
 The first two were recorded before any network output existed; the third after the results.

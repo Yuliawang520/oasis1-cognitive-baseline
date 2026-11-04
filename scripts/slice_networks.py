@@ -478,7 +478,7 @@ def seed_ensemble(out_dir: Path, cohort_name: str, model_name: str, pool_size: i
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--cohort-csv", type=Path, required=True)
-    ap.add_argument("--cohort-name", choices=("oasis", "adni"), required=True)
+    ap.add_argument("--cohort-name", choices=("oasis", "adni", "oasis60"), required=True)
     ap.add_argument("--slices-dir", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--models", nargs="+", default=["all"])

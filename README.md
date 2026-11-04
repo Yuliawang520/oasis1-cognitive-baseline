@@ -108,6 +108,8 @@ Files:
 | `scripts/adni_networks_eval.py` | ADNI1 evaluation: A5 to A7, increment over the MMSE, learning curve, scanner and site diagnostics |
 | `scripts/network_seeds_eval.py` | OASIS-1 seed sensitivity (Table S8) and stability of families F1 and F4; reads `data/oof_predictions_seeds.csv` |
 | `data/oof_predictions_seeds.csv` | Out-of-fold probabilities of the three seeded runs and their mean, per network, on the shared split |
+| `scripts/oasis60_cohort.py` | Builds the cohort file of the 189 OASIS-1 subjects aged 60 or over for the age-matched training run (Q4; output stays outside the repository) |
+| `scripts/network_agematched_eval.py` | Q4 evaluation: matched-trained ensembles versus the all-trained ensembles, age alone and LR-2 on the same subjects, with the probe refitted on them |
 
 Terminology: the original notebooks call the 24 slices "axial". A FreeSurfer-conformed volume is LIA-oriented, so `vol[:, :, k]` is a coronal slice (posterior to anterior). The code, not the label, defined the pipeline; `scripts/adni_slices.py` reproduces the original PNGs to within one grey level, and the paper now says "coronal".
 
