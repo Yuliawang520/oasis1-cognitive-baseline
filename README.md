@@ -63,7 +63,7 @@ Trained model weights are not included.
        --demographics path/to/oasis_cross-sectional.xlsx
    ```
 
-   The script prints every table and reports how many values match the paper: all 372 should match, or 358 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
+   The script prints every table and reports how many values match the paper: all 406 should match, or 392 without `--demographics`, which only the cohort table needs. It reads the probe's out-of-fold scores from `data/`, so step 5 is not needed to reproduce the main tables. Tested with Python 3.12, numpy 2.2, pandas 2.3, scipy 1.15, scikit-learn 1.8 and matplotlib 3.10.
 4. Reproduce the robustness analyses (needs torch and imbalanced-learn; about 25 minutes on a laptop CPU, because the repeated splits retrain the ANFIS 1000 times):
 
    ```bash
@@ -83,7 +83,7 @@ Trained model weights are not included.
    ```bash
    pip install pyreadr
    python scripts/adni_build_volumes.py --package path/to/ADNIMERGE2 --clinical path/to/clinical_metadata.csv --out adni_volumes_bl.csv
-   python scripts/adni_replication.py --clinical path/to/clinical_metadata.csv --adnimerge adni_volumes_bl.csv --anfis
+   python scripts/adni_replication.py --clinical path/to/clinical_metadata.csv --adnimerge adni_volumes_bl.csv --anfis --repeats 100
    ```
 
    The committed outputs in `results/adni/` contain aggregate statistics only (Table VI and Table S7 of the paper); `adni_folds.csv`, which lists ADNI subject IDs, is git-ignored and is reproducible from the fixed random state.
@@ -124,6 +124,7 @@ Terminology: the original notebooks call the 24 slices "axial". A FreeSurfer-con
 - **Repeated splits.** 100 stratified five-fold splits (`random_state` 0–99) for the five interpretable baselines, ANFIS-on-GT and the minimal ANFIS variant. The deep networks are not retrained.
 - **BrainIAC probe.** Preprocessing follows BrainIAC's released pipeline (N4, rigid registration to its `temp_head.nii.gz` template with Mattes mutual information, whole volume resized to 96³, z-scored over non-zero voxels); HD-BET is skipped because `brainmask.mgz` is already skull-stripped. The probe is an L2 logistic regression on the standardised 768-dimensional features, fitted on the four training folds of the shared split with the penalty chosen by an inner five-fold cross-validation. Pre-specified comparisons (family F5, Holm within three per cohort): probe vs MMSE alone, vs age alone and vs LR-2, on all subjects and on those aged 60 or over. The MMSE + probe fusion uses nested stacking, so no training subject receives a probe score from a model that saw it. BrainIAC's pretraining pool includes ADNI, OASIS-2, OASIS-3 and MIRIAD, but not OASIS-1; the pretraining used no labels. The penalty grid specified before the features existed (1e-4 to 10) was chosen at its lower boundary in every fold, so the primary analysis uses the grid 1e-6 to 10 and the original grid is kept as a sensitivity analysis (`--c-grid 1e-4,1e-3,1e-2,1e-1,1,10`); the released checkpoint is a MONAI ViT-B without a class token, so BrainIAC's representation is the first token of the final layer, and the mean of the 216 patch tokens is a second sensitivity variant.
 - **Decision curves.** Net benefit of LR-1, LR-3, LR-2 and the recalibrated ANFIS-on-GT on the shared split, with paired bootstrap CIs for LR-3 minus LR-1 at thresholds of 0.1 to 0.6. Net benefit is computed at the cohort prevalence (41%), which reflects OASIS-1 recruitment rather than a clinical population.
+- **Age diagnostics and ADNI extras (added before submission).** `evaluate.py` and `adni_replication.py` report a fitted age reference (out-of-fold logistic regression on centred age and its square, three parameters; uncentred, the default L2 penalty flattens the collinear quadratic term) and the age-adjusted AUC of Janes and Pepe (case-weighted mean of the within-stratum AUCs over five-year age strata, subject-level bootstrap with 2000 replicates): `results/table_s10_age_adjusted.csv`, `results/adni/adni_age_adjusted.csv`, Table S10. `adni_replication.py --repeats 100` adds the CN-versus-MCI restriction (AD excluded, out-of-fold scores of the full-cohort models), calibration statistics and 100 repeated stratified splits of the tabular models (Table S11); `adni_networks_eval.py` adds the age-adjusted AUC and the calibration of the seed ensembles (Tables S9 and S10).
 - Comments in the notebooks are in Chinese.
 
 ## Acknowledgment

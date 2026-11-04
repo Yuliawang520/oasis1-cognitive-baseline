@@ -153,3 +153,9 @@ The first two were recorded before any network output existed; the third after t
   no manufacturer effect (p ≥ 0.15); one site effect of five (ResNet-50, p = 0.028). Seed SD 0.001–0.020. The
   first pre-specified reading applies: the two-volume logistic regression is not exceeded by this family of
   networks at either sample size, and the OASIS-1 result is not a sample-size artefact.
+- 2026-11-04, diagnostics added before submission (exploratory, no new families, no change to A1–A7 or F1–F5):
+  a fitted age reference (out-of-fold logistic regression on centred age and its square; OASIS-1 0.692, ADNI1
+  0.630), the age-adjusted AUC of Janes and Pepe within five-year age strata (OASIS-1: networks 0.615–0.674 against
+  pooled 0.691–0.759, LR-2 0.805, MMSE 0.880; ADNI1: networks 0.678–0.720, LR-2 0.790), the CN-versus-MCI
+  restriction on ADNI1 (MMSE alone 0.836, LR-2 0.743), 100 repeated splits of the ADNI1 tabular models (MMSE above
+  LR-2 and LR-3 above LR-1 in every split) and calibration statistics (Tables S10 and S11 of the manuscript).

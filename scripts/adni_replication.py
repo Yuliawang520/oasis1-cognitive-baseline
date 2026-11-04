@@ -45,7 +45,8 @@ def load_cohort(clinical_csv, adnimerge_csv):
     c = pd.read_csv(clinical_csv)
     c = c[c["timepoint"] == "bl"].dropna(subset=["age_exact", "mmscore", "cdglobal"])
     cohort = pd.DataFrame({"subject_id": c["subject_id"].astype(str).str.strip(), "age": c["age_exact"].astype(float),
-                           "mmse": c["mmscore"].astype(float), "cdr_numeric": c["cdglobal"].astype(float)})
+                           "mmse": c["mmscore"].astype(float), "cdr_numeric": c["cdglobal"].astype(float),
+                           "group": c["group_bl"].astype(str) if "group_bl" in c else "unknown"})
     cohort["y"] = (cohort["cdr_numeric"] > 0).astype(int)
     volumes = False
     if adnimerge_csv:
@@ -76,7 +77,9 @@ def fit_models(cohort, volumes, use_anfis):
               "Age alone": cohort["age"].to_numpy(dtype=float),
               # non-monotonic age reference: distance from the median age (ADNI1 enrols few controls under 70)
               "Age U-score": np.abs(cohort["age"].to_numpy(dtype=float) - np.median(cohort["age"].to_numpy(dtype=float))),
-              "LR-1": ev.out_of_fold(cohort, {"mmse": "mmse"}, logistic)}
+              "LR-1": ev.out_of_fold(cohort, {"mmse": "mmse"}, logistic),
+              # fitted age reference (age + age^2, three parameters): an upper bound on age information of any shape
+              "LR-age (3 parameters)": ev.fitted_age_reference(cohort, cohort["fold"].to_numpy())}
     if volumes:
         scores["LR-3"] = ev.out_of_fold(cohort, THREE, logistic)
         scores["CART-3"] = ev.out_of_fold(cohort, THREE, tree)
@@ -86,6 +89,38 @@ def fit_models(cohort, volumes, use_anfis):
             from anfis import Config  # noqa: E402
             scores["ANFIS"] = anfis_oof(cohort, cohort["fold"].to_numpy(), ("hippo", "wbv", "mmse"), Config())
     return scores
+
+
+def repeated_splits(cohort, y, repeats, shared):
+    """Repeated stratified five-fold splits of MMSE alone, LR-1, LR-2, LR-3 and CART-3 (the ANFIS is not refitted)."""
+    import time
+    from robustness import tabular_oof  # noqa: E402
+    comparisons = [("LR-3 vs MMSE alone", "LR-3", "MMSE alone"), ("CART-3 vs MMSE alone", "CART-3", "MMSE alone"),
+                   ("LR-2 vs MMSE alone", "LR-2", "MMSE alone"), ("LR-3 vs LR-1", "LR-3", "LR-1")]
+    aucs, deltas, pvals, start = [], [], [], time.time()
+    for r in range(repeats):
+        folds = np.zeros(len(y), int)
+        for k, (_, test) in enumerate(StratifiedKFold(5, shuffle=True, random_state=r).split(np.zeros(len(y)), y)):
+            folds[test] = k
+        s = tabular_oof(cohort, folds)
+        aucs.append({m: roc_auc_score(y, v) for m, v in s.items()})
+        deltas.append({c: aucs[-1][a] - aucs[-1][b] for c, a, b in comparisons})
+        pvals.append({c: ev.delong_p(y, s[a], s[b]) for c, a, b in comparisons})
+        if (r + 1) % 20 == 0:
+            print(f"   repeat {r + 1}/{repeats} ({time.time() - start:.0f} s)", flush=True)
+    aucs, deltas, pvals = pd.DataFrame(aucs), pd.DataFrame(deltas), pd.DataFrame(pvals)
+    out = {"repeats": repeats, "models": {}, "comparisons": {}}
+    for m in aucs:
+        lo, med, hi = np.percentile(aucs[m], [2.5, 50, 97.5])
+        out["models"][m] = {"Median AUC": f"{med:.3f}", "2.5%": f"{lo:.3f}", "97.5%": f"{hi:.3f}"}
+    for c, a, b in comparisons:
+        lo, med, hi = np.percentile(deltas[c], [2.5, 50, 97.5])
+        sign = np.sign(roc_auc_score(y, shared[a]) - roc_auc_score(y, shared[b]))
+        out["comparisons"][c] = {"Shared split": f"{roc_auc_score(y, shared[a]) - roc_auc_score(y, shared[b]):+.3f}",
+                                 "Median": f"{med:+.3f}", "2.5%": f"{lo:+.3f}", "97.5%": f"{hi:+.3f}",
+                                 "Same sign (%)": f"{100 * np.mean(np.sign(deltas[c]) == sign):.0f}",
+                                 "p < 0.05 (%)": f"{100 * np.mean(pvals[c] < 0.05):.0f}"}
+    return out
 
 
 def compare(y, a, b, n_boot, seed):
@@ -108,6 +143,7 @@ def main():
     ap.add_argument("--out", type=Path, default=ev.REPO / "results" / "adni")
     ap.add_argument("--n-boot", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--repeats", type=int, default=0, help="repeated stratified five-fold splits of the tabular models (0 = skip)")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -148,6 +184,42 @@ def main():
             {m: compare(y, scores[m], scores["Age alone"], args.n_boot, args.seed) for m in ("LR-2",)})
     results["exploratory: LR-1 vs MMSE alone"] = {**compare(y, scores["LR-1"], scores["MMSE alone"], args.n_boot, args.seed)}
     results["exploratory: LR-1 vs MMSE alone"]["p"] = ev.fmt_p(results["exploratory: LR-1 vs MMSE alone"].pop("p_raw"))
+
+    # ---- diagnostics added before submission (exploratory, unadjusted) ----
+    aauc = ev.age_adjusted_table(y, age, scores, min(args.n_boot, 2000), args.seed)
+    aauc.to_csv(args.out / "adni_age_adjusted.csv", index_label="Model")
+    results["age-adjusted AUC (Janes-Pepe, 5-year strata)"] = {"strata": ev.age_strata_used(y, age), **aauc.to_dict(orient="index")}
+
+    if volumes:
+        probs = {m: scores[m] for m in ("LR-1", "LR-2", "LR-3", "CART-3") if m in scores}
+        if "ANFIS" in scores:
+            probs["ANFIS (recalibrated)"] = ev.recalibrate(scores["ANFIS"], y, folds)
+        results["calibration"] = {m: ev.calibration_stats(y, p) for m, p in probs.items()}
+
+    if "group" in cohort and set(cohort["group"]) >= {"CN", "MCI"}:
+        sub = cohort["group"].isin(["CN", "MCI"]).to_numpy()
+        yy = y[sub]
+        rng = lambda mask: f"{cohort['mmse'].to_numpy()[mask].min():.0f}-{cohort['mmse'].to_numpy()[mask].max():.0f}"
+        cn_mci = {"n": int(sub.sum()), "MCI": int(yy.sum()), "MMSE range CN": rng(sub & (y == 0)),
+                  "MMSE range MCI": rng(sub & (y == 1)), "MMSE range AD": rng(~sub),
+                  "AUC": {m: {"AUC": f"{roc_auc_score(yy, s[sub]):.3f}", "95% CI": ev.bootstrap_ci(yy, s[sub], args.n_boot, args.seed)}
+                          for m, s in scores.items()}}
+        pairs = [("MMSE alone vs LR-2", "MMSE alone", "LR-2"), ("LR-3 vs LR-1", "LR-3", "LR-1"),
+                 ("LR-3 vs MMSE alone", "LR-3", "MMSE alone"), ("ANFIS vs MMSE alone", "ANFIS", "MMSE alone"),
+                 ("LR-2 vs Age U-score", "LR-2", "Age U-score")]
+        comps = {}
+        for label, a, b in pairs:
+            if a in scores and b in scores:
+                r = compare(yy, scores[a][sub], scores[b][sub], args.n_boot, args.seed)
+                r["p"] = ev.fmt_p(r.pop("p_raw"))
+                comps[label] = r
+        cn_mci["comparisons"] = comps
+        if volumes:
+            cn_mci["likelihood ratio, LR-3 vs LR-1"] = ev.likelihood_ratio(cohort, sub)
+        results["exploratory: CN vs MCI (AD excluded; out-of-fold scores of the full-cohort models)"] = cn_mci
+
+    if args.repeats and volumes:
+        results["repeated splits (tabular models)"] = repeated_splits(cohort, y, args.repeats, scores)
 
     pd.DataFrame.from_dict(models, orient="index").to_csv(args.out / "adni_models.csv", index_label="Model")
     (args.out / "adni_results.json").write_text(json.dumps(results, indent=1), encoding="utf-8")

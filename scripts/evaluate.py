@@ -291,14 +291,7 @@ def main_table(y, folds, scores, probs, n_boot, seed):
         row = {"Params": PARAMS[name], "AUC": f"{roc_auc_score(y, s):.4f}", "95% CI": bootstrap_ci(y, s, n_boot, seed),
                "Fold AUC": f"{np.mean(per_fold):.3f} ± {np.std(per_fold, ddof=1):.3f}"}
         if name in probs:
-            p = probs[name]
-            pred = (p >= 0.5).astype(int)
-            tp, tn = ((pred == 1) & (y == 1)).sum(), ((pred == 0) & (y == 0)).sum()
-            logit = np.log(np.clip(p, 1e-6, 1 - 1e-6) / (1 - np.clip(p, 1e-6, 1 - 1e-6)))
-            cal = LogisticRegression(penalty=None).fit(logit[:, None], y)
-            row.update({"Acc.": f"{(tp + tn) / len(y):.3f}", "Sens.": f"{tp / y.sum():.3f}",
-                        "Spec.": f"{tn / (len(y) - y.sum()):.3f}", "Brier": f"{brier_score_loss(y, p):.3f}",
-                        "Slope": fmt2(cal.coef_[0][0]), "Intercept": fmt2(cal.intercept_[0])})
+            row.update(calibration_stats(y, probs[name]))
         else:
             row.update({k: "n/a" for k in ("Acc.", "Sens.", "Spec.", "Brier", "Slope", "Intercept")})
         rows[name] = row
@@ -382,6 +375,78 @@ def raw_volume_table(cohort, y, folds, scores):
             "dAUC vs LR-2 (60+)": f"{roc_auc_score(y[old], out[old]) - roc_auc_score(y[old], scores['LR-2'][old]):+.3f}",
             "rho with age, non-demented": f"{spearmanr(age[nd], out[nd])[0]:+.2f}",
             "AUC young (<60) vs old non-demented": f"{roc_auc_score((age[nd] >= 60).astype(int), out[nd]):.3f}"}
+
+
+def calibration_stats(y, p):
+    """Operating point at 0.5, Brier score and calibration slope and intercept of a probability vector."""
+    pred = (p >= 0.5).astype(int)
+    tp, tn = ((pred == 1) & (y == 1)).sum(), ((pred == 0) & (y == 0)).sum()
+    logit = np.log(np.clip(p, 1e-6, 1 - 1e-6) / (1 - np.clip(p, 1e-6, 1 - 1e-6)))
+    cal = LogisticRegression(penalty=None).fit(logit[:, None], y)
+    return {"Acc.": f"{(tp + tn) / len(y):.3f}", "Sens.": f"{tp / y.sum():.3f}",
+            "Spec.": f"{tn / (len(y) - y.sum()):.3f}", "Brier": f"{brier_score_loss(y, p):.3f}",
+            "Slope": fmt2(cal.coef_[0][0]), "Intercept": fmt2(cal.intercept_[0])}
+
+
+AGE_STRATUM = 5  # years, for the covariate-adjusted AUC
+
+
+def fitted_age_reference(cohort, folds):
+    """Out-of-fold logistic regression on age and age squared (three parameters): an upper bound on what age alone
+    can give whatever the shape of the age structure (diagnostic only). Age is centred on the training-fold mean
+    before squaring, so that the two terms are nearly orthogonal and the default L2 penalty does not flatten the
+    curvature (uncentred, the collinear quadratic term is shrunk to zero)."""
+    age = cohort["age"].to_numpy(dtype=float)
+    y = cohort["y"].to_numpy()
+    out = np.zeros(len(y))
+    for k in np.unique(folds):
+        tr, te = folds != k, folds == k
+        centred = age - age[tr].mean()
+        x = np.c_[centred, centred ** 2]
+        sc = StandardScaler().fit(x[tr])
+        out[te] = LogisticRegression(max_iter=1000).fit(sc.transform(x[tr]), y[tr]).predict_proba(sc.transform(x[te]))[:, 1]
+    return out
+
+
+def age_adjusted_auc(y, s, age, width=AGE_STRATUM):
+    """Covariate-adjusted AUC of Janes and Pepe (Biometrika, 2009): the AUCs within age strata of `width` years,
+    weighted by the number of cases in each stratum. Strata with one class only (the young OASIS-1 volunteers)
+    drop out, so the statistic measures discrimination at a fixed age."""
+    strata = np.floor(age / width).astype(int)
+    num, den = 0.0, 0
+    for z in np.unique(strata):
+        m = strata == z
+        if y[m].min() == y[m].max():
+            continue
+        n_cases = int(y[m].sum())
+        num += n_cases * roc_auc_score(y[m], s[m])
+        den += n_cases
+    return num / den if den else float("nan")
+
+
+def age_strata_used(y, age, width=AGE_STRATUM):
+    strata = np.floor(age / width).astype(int)
+    used = [z for z in np.unique(strata) if y[strata == z].min() != y[strata == z].max()]
+    return [f"{z * width}-{z * width + width - 1}" for z in used]
+
+
+def age_adjusted_table(y, age, scores, n_boot, seed, width=AGE_STRATUM):
+    """Age-adjusted AUC of every score with a subject-level paired bootstrap 95% CI (strata recomputed per resample)."""
+    rng = np.random.default_rng(seed)
+    names = list(scores)
+    boots = {m: [] for m in names}
+    for _ in range(n_boot):
+        idx = rng.integers(0, len(y), len(y))
+        if y[idx].min() == y[idx].max():
+            continue
+        for m in names:
+            boots[m].append(age_adjusted_auc(y[idx], scores[m][idx], age[idx], width))
+    rows = {}
+    for m in names:
+        b = np.array([v for v in boots[m] if not np.isnan(v)])
+        rows[m] = {"AAUC": f"{age_adjusted_auc(y, scores[m], age, width):.3f}",
+                   "95% CI": f"[{np.percentile(b, 2.5):.3f}, {np.percentile(b, 97.5):.3f}]"}
+    return pd.DataFrame.from_dict(rows, orient="index")
 
 
 def epv_table(lr):
@@ -570,6 +635,20 @@ def main():
         raw = raw_volume_table(cohort, y, folds, scores)
         print("\nRaw-volume logistic regression (no age residualisation)", json.dumps(raw))
         results["raw_volume_lr2"] = raw
+
+        # diagnostics added before submission: a fitted age reference and the age-adjusted AUC
+        age_years = cohort["age"].to_numpy(dtype=float)
+        fitted = fitted_age_reference(cohort, folds)
+        old = age_years >= 60
+        results["fitted_age_reference"] = {
+            "all": {"AUC": f"{roc_auc_score(y, fitted):.3f}", "95% CI": bootstrap_ci(y, fitted, args.n_boot, args.seed)},
+            "60+": {"AUC": f"{roc_auc_score(y[old], fitted[old]):.3f}", "95% CI": bootstrap_ci(y[old], fitted[old], args.n_boot, args.seed)},
+            "models above it (all)": [m for m in MODELS if m != "Age alone" and roc_auc_score(y, scores[m]) > roc_auc_score(y, fitted)]}
+        print("\nFitted age reference (age + age^2, 3 parameters)", json.dumps(results["fitted_age_reference"]))
+        aauc = age_adjusted_table(y, age_years, scores, min(args.n_boot, 2000), args.seed)
+        print(f"\nAge-adjusted AUC (Janes-Pepe, {AGE_STRATUM}-year strata {age_strata_used(y, age_years)})\n", aauc.to_string())
+        aauc.to_csv(args.out / "table_s10_age_adjusted.csv", index_label="Model")
+        results["age_adjusted_auc"] = {"strata": age_strata_used(y, age_years), **aauc.to_dict(orient="index")}
 
     style()
     plot_roc(y, scores, args.out / "fig_roc.pdf")

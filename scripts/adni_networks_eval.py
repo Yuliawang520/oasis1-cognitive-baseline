@@ -198,6 +198,13 @@ def main() -> None:
                            f"Kruskal-Wallis site (>= {MIN_SITE} participants), p": ev.fmt_p(kw_site), "sites": int(len(site_groups))}
         results[f"shortcut diagnostics within {label}"] = diag
 
+    # diagnostics added before submission: age-adjusted AUC and calibration of the seed ensembles
+    bench_scores = {**full, "LR-2": scores["LR-2"], "LR-2 raw": scores["LR-2 raw"], "MMSE alone": scores["MMSE alone"],
+                    "Age U-score": scores["Age U-score"]}
+    aauc = ev.age_adjusted_table(y, age, bench_scores, min(nb, 2000), sd)
+    results["age-adjusted AUC (Janes-Pepe, 5-year strata)"] = {"strata": ev.age_strata_used(y, age), **aauc.to_dict(orient="index")}
+    results["calibration (seed ensembles, full pool)"] = {t: ev.calibration_stats(y, s) for t, s in full.items()}
+
     pd.DataFrame.from_dict(models, orient="index").to_csv(args.out / "adni_networks_models.csv", index_label="Model")
     (args.out / "adni_networks_results.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     print(json.dumps(results, indent=1))
