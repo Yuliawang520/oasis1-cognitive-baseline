@@ -647,7 +647,7 @@ def main():
         print("\nFitted age reference (age + age^2, 3 parameters)", json.dumps(results["fitted_age_reference"]))
         aauc = age_adjusted_table(y, age_years, scores, min(args.n_boot, 2000), args.seed)
         print(f"\nAge-adjusted AUC (Janes-Pepe, {AGE_STRATUM}-year strata {age_strata_used(y, age_years)})\n", aauc.to_string())
-        aauc.to_csv(args.out / "table_s10_age_adjusted.csv", index_label="Model")
+        aauc.to_csv(args.out / "table_age_adjusted.csv", index_label="Model")
         results["age_adjusted_auc"] = {"strata": age_strata_used(y, age_years), **aauc.to_dict(orient="index")}
 
     style()

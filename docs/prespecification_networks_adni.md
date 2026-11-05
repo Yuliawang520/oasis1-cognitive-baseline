@@ -163,7 +163,7 @@ The first two were recorded before any network output existed; the third after t
   0.015 and 0.014. Consequences: no F1 conclusion changed; in F4, VGG-16 became significant on all subjects (the
   single run had Holm p 0.078, every seed and the ensemble p ≤ 0.036), and in the subjects aged 60 or over all
   five ensembles exceeded age alone (ResNet-50, DenseNet-121 and Swin-T did so in 0, 2 and 1 of 3 seeds). The
-  manuscript therefore reports the ensemble results and states which conclusions hold in every seed (Table S8).
+  manuscript therefore reports the ensemble results and states which conclusions hold in every seed (Table S6).
 
 ## Checkpoints
 
@@ -209,5 +209,6 @@ The first two were recorded before any network output existed; the third after t
   cross-validation chose C = 1e-6 in three folds and 1e-5 and 1e-2 in the others, which shrinks the scores to
   fold-specific scales, so the pooled AUC fell to 0.511 while the fold AUCs (0.646 ± 0.118) agreed with those of
   the all-fitted probe on the same subjects (0.655 ± 0.107) within 0.04 in every fold; both numbers are reported
-  (Table S12). Two fold runs stopped at epoch 2 (VGG-16 seed 2 fold 2, Swin-T seed 2 fold 3). Manuscript: Sections
-  III-E, IV-F, IV-G, V-A and the fifth limitation; Table S12.
+  (Section IV-G of the manuscript; `results/agematched.json`). Two fold runs stopped at epoch 2 (VGG-16 seed 2 fold 2, Swin-T seed 2 fold 3). Manuscript: Sections
+  III-E, IV-F, IV-G, V-A, V-D and the fifth limitation; Table S10 (numbered S12 until the supplementary
+  tables were consolidated later on 2026-11-05, when Tables S3 and S7 were folded into Section IV-H and Table VI).

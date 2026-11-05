@@ -157,7 +157,7 @@ def main() -> None:
                "F4 by variant": {v: {lab: {m: {"dAUC": f"{e['dAUC']:+.3f}", "Holm p": ev.fmt_p(e["Holm p"])} for m, e in d.items()}
                                      for lab, d in fam.items()} for v, fam in f4.items()}}
     args.out.mkdir(parents=True, exist_ok=True)
-    table.to_csv(args.out / "table_s8_seed_sensitivity.csv", index_label="Model")
+    table.to_csv(args.out / "table_seed_sensitivity.csv", index_label="Model")
     (args.out / "seed_sensitivity.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     with pd.option_context("display.width", 220, "display.max_columns", 20):
         print(table.to_string())

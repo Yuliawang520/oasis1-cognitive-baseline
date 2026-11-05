@@ -23,7 +23,7 @@ vs the all-fitted probe (exploratory), with pooled and per-fold AUCs, because th
 cross-validation can shrink the probe scores to fold-specific scales, which lowers the pooled AUC but not the
 fold AUCs.
 
-Outputs: results/table_s12_agematched.csv and results/agematched.json (aggregate only).
+Outputs: results/table_agematched.csv and results/agematched.json (aggregate only).
 Usage: python scripts/network_agematched_eval.py --cohort ... [--runs-dir path/to/runs_oasis60] [--features ...]
 """
 from __future__ import annotations
@@ -167,7 +167,7 @@ def main() -> None:
             "AAUC refitted": f"{ev.age_adjusted_auc(yy, oof, age60):.3f}", "AAUC all-fitted": f"{ev.age_adjusted_auc(yy, all_probe, age60):.3f}"}
 
     args.out.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame.from_dict(table, orient="index").to_csv(args.out / "table_s12_agematched.csv", index_label="Model")
+    pd.DataFrame.from_dict(table, orient="index").to_csv(args.out / "table_agematched.csv", index_label="Model")
     (args.out / "agematched.json").write_text(json.dumps(results, indent=1), encoding="utf-8")
     with pd.option_context("display.width", 250, "display.max_columns", 20):
         print(pd.DataFrame.from_dict(table, orient="index").to_string())
