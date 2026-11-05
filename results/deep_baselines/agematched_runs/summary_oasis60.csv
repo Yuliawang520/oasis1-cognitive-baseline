@@ -1,0 +1,16 @@
+cohort,model,seed,pool_size,n,auc
+oasis60,densenet121,0,full,189,0.6288
+oasis60,densenet121,1,full,189,0.6228
+oasis60,densenet121,2,full,189,0.637
+oasis60,vgg16,0,full,189,0.6993
+oasis60,vgg16,1,full,189,0.6857
+oasis60,vgg16,2,full,189,0.6862
+oasis60,resnet50,0,full,189,0.6514
+oasis60,resnet50,1,full,189,0.6288
+oasis60,resnet50,2,full,189,0.641
+oasis60,deit_small,0,full,189,0.6775
+oasis60,deit_small,1,full,189,0.67
+oasis60,deit_small,2,full,189,0.6458
+oasis60,swin_t,0,full,189,0.6482
+oasis60,swin_t,1,full,189,0.6434
+oasis60,swin_t,2,full,189,0.6751

@@ -194,3 +194,20 @@ The first two were recorded before any network output existed; the third after t
   pooled 0.691–0.759, LR-2 0.805, MMSE 0.880; ADNI1: networks 0.678–0.720, LR-2 0.790), the CN-versus-MCI
   restriction on ADNI1 (MMSE alone 0.836, LR-2 0.743), 100 repeated splits of the ADNI1 tabular models (MMSE above
   LR-2 and LR-3 above LR-1 in every split) and calibration statistics (Tables S10 and S11 of the manuscript).
+- 2026-11-05, Q4 (OASIS-1, the 189 subjects aged 60 or over; L4, 4.5 GPU hours, 75 fold runs; the run started after
+  commit 7c647cd had fixed the section above). Matched-trained seed ensembles: VGG-16 0.695, DeiT-Small 0.670,
+  Swin-T 0.667, ResNet-50 0.647, DenseNet-121 0.640. M1 (minus the all-trained ensembles on the same subjects):
+  DeiT-Small −0.006, VGG-16 +0.025, ResNet-50 +0.015, DenseNet-121 +0.002, Swin-T +0.038; none significant after
+  Holm correction (Swin-T unadjusted p = 0.030, Holm p = 0.148). M2: +0.104 to +0.159 above age alone (0.536),
+  Holm p ≤ 0.017. M3: 0.105 to 0.160 below LR-2 (0.800), Holm p ≤ 0.0089. Exploratory: 0.182 to 0.237 below the
+  MMSE score. ρ with age within the 96 non-demented subjects 0.57–0.65 (all-trained ensembles on the same subjects
+  0.54–0.75); age-adjusted AUC 0.638–0.698 against 0.615–0.674. The first pre-specified reading applies: the
+  younger volunteers did not displace disease information during training, and the subgroup AUC of the all-trained
+  networks is what the slices carry beyond age. Two M1 differences (VGG-16, Swin-T) exceeded +0.02 without reaching
+  significance, which the manuscript states; the expected fall of ρ occurred for four of five networks but was
+  small. No network reached LR-2, consistent with A5. Probe refitted on the 189 subjects (exploratory): the inner
+  cross-validation chose C = 1e-6 in three folds and 1e-5 and 1e-2 in the others, which shrinks the scores to
+  fold-specific scales, so the pooled AUC fell to 0.511 while the fold AUCs (0.646 ± 0.118) agreed with those of
+  the all-fitted probe on the same subjects (0.655 ± 0.107) within 0.04 in every fold; both numbers are reported
+  (Table S12). Two fold runs stopped at epoch 2 (VGG-16 seed 2 fold 2, Swin-T seed 2 fold 3). Manuscript: Sections
+  III-E, IV-F, IV-G, V-A and the fifth limitation; Table S12.
