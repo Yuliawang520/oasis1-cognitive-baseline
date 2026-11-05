@@ -2,7 +2,7 @@
 
 Code, the subject-level cross-validation split, and out-of-fold model predictions for
 
-> Y. Cao, J. Fu, and S. Ling, "An Input-Attribution Framework for Dementia Classifiers: Cognitive Score and Age, Not Architecture, Explain MRI Model Accuracy," manuscript, 2026.
+> Y. Cao, J. Fu, and S. Ling, "Cognitive Score and Age, Not Architecture, Explain the Accuracy of MRI Dementia Classifiers," manuscript, 2026.
 
 The paper attributes the accuracy of thirteen dementia classifiers to four sources: the cognitive score given as input, the age of the subjects, the images and the model architecture. On 226 OASIS-1 subjects (133 non-demented, 93 demented) and one shared subject-level 5-fold split:
 
@@ -142,7 +142,7 @@ OASIS-1 reference: D. S. Marcus et al., "Open Access Series of Imaging Studies (
 ```bibtex
 @misc{cao2026mri,
   author = {Cao, Yu and Fu, Jinrong and Ling, Steve},
-  title  = {An Input-Attribution Framework for Dementia Classifiers: Cognitive Score and Age, Not Architecture, Explain {MRI} Model Accuracy},
+  title  = {Cognitive Score and Age, Not Architecture, Explain the Accuracy of {MRI} Dementia Classifiers},
   note   = {Manuscript},
   year   = {2026}
 }
