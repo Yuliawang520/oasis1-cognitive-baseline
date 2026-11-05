@@ -481,6 +481,13 @@ def style():
 
 
 def plot_roc(y, scores, path):
+    """Printed at 0.75 of a column (about 2.6 in), so 8 pt here is about 6 pt on the page."""
+    with plt.rc_context({"font.size": 8, "axes.labelsize": 8.5, "legend.fontsize": 8,
+                         "xtick.labelsize": 8, "ytick.labelsize": 8}):
+        _plot_roc(y, scores, path)
+
+
+def _plot_roc(y, scores, path):
     fig, ax = plt.subplots(figsize=(3.5, 3.3))
     ax.plot([0, 1], [0, 1], color="0.55", lw=0.6, ls=":", zorder=1)
     deep_aucs = [auc3(y, scores[m]) for m in DEEP_COLUMNS]
@@ -491,7 +498,7 @@ def plot_roc(y, scores, path):
     curves = [  # drawn bottom to top; the legend lists them by AUC
         ("Age alone", "Age alone", "0.3", 1.2, (0, (1.2, 1.4))),
         (PROBE, "BrainIAC probe", "0.3", 1.1, (0, (4, 1.5))),
-        ("LR-2", "LR-2, imaging only", BLUE, 1.1, "-"),
+        ("LR-2", "LR-2", BLUE, 1.1, "-"),
         ("ANFIS-on-extracted", "ANFIS-on-extracted", PURPLE, 1.1, DASH_DOT),
         ("ANFIS-on-GT", "ANFIS-on-GT", VERMILION, 1.3, DASH_DOT),
         ("CART-3", "CART-3", ORANGE, 1.0, (0, (2.5, 1.5))),
@@ -504,9 +511,9 @@ def plot_roc(y, scores, path):
         ax.plot(fpr, tpr, color=color, lw=lw, ls=ls, zorder=3, label=f"{label} ({auc3(y, scores[name])})")
     handles, labels = ax.get_legend_handles_labels()
     order = sorted(range(len(labels)), key=lambda i: -float(labels[i].rsplit("(", 1)[1].split("–")[-1].rstrip(")")))
-    ax.legend([handles[i] for i in order], [labels[i] for i in order], loc="lower right", title="Model (AUC)",
+    ax.legend([handles[i] for i in order], [labels[i] for i in order], loc="lower right",
               frameon=True, framealpha=0.95, edgecolor="0.75", fancybox=False, borderpad=0.4,
-              labelspacing=0.25, handlelength=2.4, handletextpad=0.5, borderaxespad=0.3)
+              labelspacing=0.2, handlelength=1.8, handletextpad=0.5, borderaxespad=0.3)
     ax.set(xlim=(-0.01, 1.01), ylim=(-0.01, 1.01), xlabel="False positive rate", ylabel="True positive rate")
     ax.set_xticks(np.linspace(0, 1, 6))
     ax.set_yticks(np.linspace(0, 1, 6))
